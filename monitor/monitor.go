@@ -65,10 +65,13 @@ func (m *Monitor) Run() {
 	fmt.Println("listen download status")
 	s := gocron.NewScheduler(time.UTC)
 	s.Every(1).Seconds().Do(func() {
-		finishPurchases := m.Model.GetFinishPurchaseOrders()
-		for _, p := range *finishPurchases {
-			m.Finish(int64(p.Id))
-			if err := m.Model.UpdatePurchaseOrderState(p.Id, model.FinishContractStarted); err != nil {
+		finishPurchase, got := m.Model.GetNextPurchaseOrderToFinish()
+		if got {
+			err := m.Finish(int64(finishPurchase.Id))
+			if err != nil {
+				fmt.Println("##################", err)
+			}
+			if err := m.Model.UpdatePurchaseOrderState(finishPurchase.Id, model.FinishContractStarted); err != nil {
 				log.Error(err)
 			}
 		}

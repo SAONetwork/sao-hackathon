@@ -141,6 +141,11 @@ func (s *Server) uploadFile(reader io.Reader, filename string, contentType strin
 		return nil, xerrors.New("database error")
 	}
 
+	fileExtension := filepath.Ext(filePreview.Filename)
+	if fileExtension != "" {
+		fileExtension = fileExtension[1:]
+	}
+
 	filInfo = model.FileInfoInMarket{
 		Id:             filePreview.Id,
 		EthAddr:        filePreview.EthAddr,
@@ -155,7 +160,7 @@ func (s *Server) uploadFile(reader io.Reader, filename string, contentType strin
 		FileCategory:   fileCategory,
 		AdditionalInfo: additionalInfo,
 		AlreadyPaid:    false,
-		FileExtension:  filepath.Ext(filePreview.Filename)[1:]}
+		FileExtension:  fileExtension}
 
 	return &filInfo, nil
 }

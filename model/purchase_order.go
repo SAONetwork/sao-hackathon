@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type PurchaseOrder struct {
 	Id             uint
 	FileId         int64
@@ -7,6 +9,7 @@ type PurchaseOrder struct {
 	OrderTxHash    string
 	CompleteTxHash string
 	State          OrderState
+	UpdatedAt    time.Time
 }
 
 func (model *Model) GetPurchaseOrder(fileId uint, ethAddress string) *PurchaseOrder {
@@ -15,10 +18,26 @@ func (model *Model) GetPurchaseOrder(fileId uint, ethAddress string) *PurchaseOr
 	return &purchaseOrder
 }
 
-func (model *Model) GetFinishPurchaseOrders() *[]PurchaseOrder {
-	var purchaseOrders []PurchaseOrder
-	model.DB.Model(&PurchaseOrder{}).Where("state = ?", ReadyToDownload).Find(&purchaseOrders)
-	return &purchaseOrders
+func (model *Model) GetNextPurchaseOrderToFinish() (*PurchaseOrder, bool) {
+	var count int64
+	model.DB.Model(&PurchaseOrder{}).Where("state = ?", FinishContractStarted).Where("updated_at > ?", time.Now().Add(-time.Minute * 5)).Count(&count)
+	if count >0 {
+		return nil, false
+	}
+	var purchaseOrder PurchaseOrder
+
+	// the contract started but not finished - retry
+	model.DB.Model(&PurchaseOrder{}).Where("state = ?", FinishContractStarted).Where("updated_at < ?", time.Now().Add(-time.Minute * 5)).First(&purchaseOrder)
+	if purchaseOrder.Id > 0 {
+		return &purchaseOrder, true
+	}
+
+	model.DB.Model(&PurchaseOrder{}).Where("state = ?", ReadyToDownload).First(&purchaseOrder)
+	if purchaseOrder.Id > 0 {
+		return &purchaseOrder, true
+	} else {
+		return nil, false
+	}
 }
 
 func (model *Model) CreatePurchaseOrder(purchaseOrder *PurchaseOrder) error {

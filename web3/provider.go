@@ -109,15 +109,14 @@ func (p *Provider) SubscribeNewHead(ch chan *types.Header) {
 	p.client.SubscribeNewHead(ctx, ch)
 }
 
-func (p *Provider) SendTx(tx *types.Transaction) {
+func (p *Provider) SendTx(tx *types.Transaction) error {
 	ctx := context.Background()
-	p.client.SendTransaction(ctx, tx)
+	return p.client.SendTransaction(ctx, tx)
 }
 
-func (p *Provider) GetNonce() (uint, error) {
+func (p *Provider) GetNonce(address common.Address) (uint64, error) {
 	ctx := context.Background()
-	var hash common.Hash
-	return p.client.TransactionCount(ctx, hash)
+	return p.client.PendingNonceAt(ctx, address)
 }
 
 func (p *Provider) Getgasprice() (*big.Int, error) {

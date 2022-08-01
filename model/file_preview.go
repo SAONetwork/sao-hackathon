@@ -98,6 +98,10 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 	if err := model.DB.Model(&FileInfo{}).Where("id = ?", filePreview.FileId).Find(&ipfsFileInfo).Error; err != nil {
 		return nil, errors.New("ipfs file not found in system")
 	}
+	fileExtension := filepath.Ext(filePreview.Filename)
+	if fileExtension != "" {
+		fileExtension = fileExtension[1:]
+	}
 	filesInfoInMarket := FileDetail{
 		FileInfoInMarket: FileInfoInMarket{Id: filePreview.Id,
 			CreatedAt:      filePreview.CreatedAt,
@@ -115,7 +119,7 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 			FileCategory:   filePreview.FileCategory,
 			AdditionalInfo: filePreview.AdditionalInfo,
 			AlreadyPaid:    paid,
-			FileExtension:  filepath.Ext(filePreview.Filename)[1:]},
+			FileExtension:  fileExtension},
 		IpfsHash:        ipfsFileInfo.IpfsHash,
 		Size:            ipfsFileInfo.Size,
 		Cid:             ipfsFileInfo.Cid,
@@ -152,6 +156,10 @@ func (model *Model) GetMarketFiles(limit int, offset int, ethAddress string, con
 				paid = true
 			}
 		}
+		fileExtension := filepath.Ext(filePreview.Filename)
+		if fileExtension != "" {
+			fileExtension = fileExtension[1:]
+		}
 		filesInfoInMarket = append(filesInfoInMarket, FileInfoInMarket{Id: filePreview.Id,
 			CreatedAt:    filePreview.CreatedAt,
 			UpdatedAt:    filePreview.UpdatedAt,
@@ -167,7 +175,7 @@ func (model *Model) GetMarketFiles(limit int, offset int, ethAddress string, con
 			NftTokenId:   filePreview.NftTokenId,
 			FileCategory: filePreview.FileCategory,
 			AdditionalInfo: filePreview.AdditionalInfo,
-			FileExtension: filepath.Ext(filePreview.Filename)[1:],
+			FileExtension: fileExtension,
 			AlreadyPaid:  paid})
 	}
 	return &filesInfoInMarket, count

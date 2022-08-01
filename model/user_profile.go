@@ -2,32 +2,31 @@ package model
 
 import (
 	"fmt"
+	"github.com/shopspring/decimal"
 	"path/filepath"
 )
 
 type UserProfile struct {
 	SaoModel
-	EthAddr  string `json:"ethAddr"`
-	Avatar   string `json:"avatar"`
-	Username string `json:"username"`
+	EthAddr  string
+	Avatar   string
+	Username string
 }
 
 type UserProfileVO struct {
-	Avatar   string `json:"avatar"`
-	Username string `json:"username"`
+	Avatar   string
+	Username string
 }
 
 type UserSummary struct {
-	SpaceUsed      int64 `json:"SpaceUsed"`
-	SpaceQuota     int64 `json:"spaceQuota"`
-	Applications   int
-	TotalUploads   int `json:"totalUploads"`
-	PublicUploads  int `json:"publicUploads"`
-	PurchasesFiles int `json:"purchasesFiles"`
-	Collections    int `json:"collections"`
-	TotalPaid      float64
-	TotalEarned    float64
-	SellFiles      int
+	SpaceUsed     int64
+	SpaceQuota    int64
+	Applications  int
+	TotalUploads  int
+	PublicUploads int
+	Collections   int
+	PurchaseSummary
+	SellSummary
 }
 
 type UserDashboard struct {
@@ -38,6 +37,16 @@ type UserDashboard struct {
 type UserPurchases struct {
 	Purchases      []FileInfoInMarket
 	TotalPurchases int64
+}
+
+type PurchaseSummary struct {
+	PurchasesFiles int
+	TotalPaid      decimal.Decimal
+}
+
+type SellSummary struct {
+	SellFiles   int
+	TotalEarned decimal.Decimal
 }
 
 func (model *Model) UpsertUserProfile(ethAddr string, updateProfile UserProfile) (*UserProfile, error) {
@@ -72,10 +81,26 @@ func (model *Model) GetUserSummary(ethAddr string) (*UserSummary, error) {
 	condition := &FilePreview{EthAddr: ethAddr}
 	result := model.DB.Model(&FilePreview{}).Where(condition).Where("status = 1 or (status = 2 and price = 0) or (status = 2 and price > 0 and nft_token_id > 0)").Count(&uploads)
 
+	var sellSummary SellSummary
+	model.DB.Table("file_previews").Select("sum(price) as total_earned, count(*) as sell_files").
+		Joins("inner join purchase_orders on file_previews.id = purchase_orders.file_id").Where("file_previews.eth_addr = ?", ethAddr).Scan(&sellSummary)
+
+	var purchaseSummary PurchaseSummary
+	model.DB.Model(&FilePreview{}).Select("sum(price) as total_paid, count(*) as purchases_files").
+		Joins("inner join purchase_orders on file_previews.id = purchase_orders.file_id").Where("purchase_orders.buyer_addr = ?", ethAddr).Scan(&purchaseSummary)
+
 	userSummary := UserSummary{
 		Applications:  5,
 		PublicUploads: int(uploads),
 		TotalUploads:  int(uploads),
+		PurchaseSummary: PurchaseSummary{
+			TotalPaid:      purchaseSummary.TotalPaid,
+			PurchasesFiles: purchaseSummary.PurchasesFiles,
+		},
+		SellSummary: SellSummary{
+			SellFiles:   sellSummary.SellFiles,
+			TotalEarned: sellSummary.TotalEarned,
+		},
 	}
 	if result.Error != nil {
 		return nil, result.Error
@@ -96,6 +121,10 @@ func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, prev
 
 	var fileInfoInMarket []FileInfoInMarket
 	for _, upload := range uploads {
+		fileExtension := filepath.Ext(upload.Filename)
+		if fileExtension != "" {
+			fileExtension = fileExtension[1:]
+		}
 		fileInfoInMarket = append(fileInfoInMarket, FileInfoInMarket{Id: upload.Id,
 			CreatedAt:      upload.CreatedAt,
 			UpdatedAt:      upload.UpdatedAt,
@@ -111,7 +140,7 @@ func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, prev
 			NftTokenId:     upload.NftTokenId,
 			FileCategory:   upload.FileCategory,
 			AdditionalInfo: upload.AdditionalInfo,
-			FileExtension:  filepath.Ext(upload.Filename)[1:],
+			FileExtension:  fileExtension,
 			AlreadyPaid:    true})
 	}
 	dashboard.RecentUploads = fileInfoInMarket
@@ -132,7 +161,7 @@ func (model *Model) GetUserPurchases(limit int, offset int, ethAddr string, prev
 
 	// recent uploads
 	var uploads []FilePreview
-	result := model.DB.Model(&FilePreview{}).Joins("RIGHT JOIN purchase_orders ON purchase_orders.file_id = file_previews.id").Where("purchase_orders.buyer_addr = ?", ethAddr).Limit(limit).Offset(offset).Find(&uploads)
+	result := model.DB.Model(&FilePreview{}).Joins("RIGHT JOIN purchase_orders ON purchase_orders.file_id = file_previews.id").Where("purchase_orders.buyer_addr = ?", ethAddr).Limit(limit).Offset(offset).Order("created_at desc").Find(&uploads)
 	if result.Error != nil {
 		return nil, result.Error
 	}
