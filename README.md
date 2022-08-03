@@ -13,6 +13,23 @@ The required prerequisites that need to be set up before the workshop.
 - Ethereum client provider
 
 ### Build
+introduce Filecoin FFI first
+```shell
+cd ./extern/filecoin-ffi
+git clone git@github.com:filecoin-project/filecoin-ffi.git ./
+git checkout 943e335
+```
+at the first time, uncomment these lines in Makefile to make sure Filecoin FFI has been built
+```shell
+#FFI_PATH:=extern/filecoin-ffi/
+#FFI_DEPS:=.install-filcrypto
+#FFI_DEPS:=$(addprefix $(FFI_PATH),$(FFI_DEPS))
+
+#build/.filecoin-install: $(FFI_PATH)
+	#$(MAKE) -C $(FFI_PATH) $(FFI_DEPS:$(FFI_PATH)%=%)
+#BUILD_DEPS+=build/.filecoin-install
+```
+build the project
 ```shell
 make all
 ```
@@ -61,7 +78,9 @@ previewsPath specify the folder to store the preview of uploaded files. host is 
 
 ###### libp2p
 directPeers is defined in this section, the peer id and address can be found in logs when you start your procnode service
-![](../../Desktop/screenshot/Screen Shot 2022-08-02 at 4.21.08 PM.png)
+```text
+2022-08-03T16:35:18.382+0800    INFO    proc    procnode/main.go:141    node peer id: 12D3KooWBhUiC13vCsh4ByWAkVpGnvBrfhZJfu98yM87UF9cpSyb, multiaddrs: [/ip4/127.0.0.1/tcp/36951]
+```
 
 #### monitor
 The default repo path is ~/.sao-ds and can be custom by environment var SAO_DS_PATH or parameter --repo
