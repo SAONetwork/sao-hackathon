@@ -1,5 +1,11 @@
 # Storverse
-
+In Storverse project, we have three parts of service to accomplish the work
+- server 
+  - the main server for the demonstration website, which provide api service for end users and interact with procnode
+- monitor
+  - the project to listen the contract event in ethereum
+- procnode
+  - the node which provide data processing ability, like data encryption and decryption, as well as all possible data processing way like version tracking, provenance... to be expanded.
 
 # Getting Started
 
@@ -13,30 +19,20 @@ The required prerequisites that need to be set up before the workshop.
 - Ethereum client provider
 
 ### Build
-introduce Filecoin FFI first
+Init submodule
 ```shell
-cd ./extern/filecoin-ffi
-git clone git@github.com:filecoin-project/filecoin-ffi.git ./
+git submodule update --init --recursive
+cd extern/filecoin-ffi
 git checkout 943e335
 ```
-at the first time, uncomment these lines in Makefile to make sure Filecoin FFI has been built
-```shell
-#FFI_PATH:=extern/filecoin-ffi/
-#FFI_DEPS:=.install-filcrypto
-#FFI_DEPS:=$(addprefix $(FFI_PATH),$(FFI_DEPS))
-
-#build/.filecoin-install: $(FFI_PATH)
-	#$(MAKE) -C $(FFI_PATH) $(FFI_DEPS:$(FFI_PATH)%=%)
-#BUILD_DEPS+=build/.filecoin-install
-```
-build the project
+Build the project
 ```shell
 make all
 ```
 
 ### Config
 #### server
-create server repo, the default repo path is ~/.sao-ds, you can change it by setting environment var SAO_DS_PATH or parameter --repo
+Create server repo, the default repo path is ~/.sao-ds, you can change it by setting environment var SAO_DS_PATH or parameter --repo
 ```shell
 mkdir ~/.sao-ds
 touch ~/.sao-ds/config.toml
@@ -59,11 +55,11 @@ ip = "127.0.0.1"
 port = 8097
 contextPath = "/saods"
 exposedPath = "http://127.0.0.1:8097"
-previewsPath = "/home/ubuntu/go-sao-datastore/previews"
+previewsPath = "my/previews/path"
 host = "https://rinkeby.sao.network/saods"
 
 [libp2p]
-directPeers = ["/ip4/127.0.0.1/tcp/[port_number]/p2p/xxx...xxx"]
+directPeers = ["/ip4/127.0.0.1/tcp/[port_number]/p2p/[peer_id]"]
 ```
 
 ###### ipfs
@@ -88,16 +84,16 @@ The default repo path is ~/.sao-ds and can be custom by environment var SAO_DS_P
 config.toml format:
 ```shell
 [monitor]
-provider = "wss://rinkeby.infura.io/ws/v3/xxx...xxx"
-contract = "0xXXX...XXX"
-blockNumber = 11027543
+provider = "wss://rinkeby.infura.io/ws/v3/[project_id]"
+contract = "[contract_address]"
+blockNumber = [contract_creation_block_number]
 mnemonic = ""
 ```
 ###### monitor
 monitor section is used to listen ethereum event. In this case we deploy contract https://github.com/SaoNetwork/hackathon-contracts/blob/main/contracts/NFT.sol at 0xFA5D30eAC8c9831eCe8b082F2A353Ba86Ee59cb8, from block number 11027543, mnemonic should be filled in config for download event.
 
 #### procnode
-create sao-procnode repo, the default repo path is ~/.sao-procnode, you can change it by setting environment var SAO_PROCNODE_PATH or parameter --repo
+Create sao-procnode repo, the default repo path is ~/.sao-procnode, you can change it by setting environment var SAO_PROCNODE_PATH or parameter --repo
 ```shell
 mkdir ~/.sao-procnode
 touch ~/.sao-procnode/config.toml
@@ -136,19 +132,20 @@ listenAddresses: the p2p address of ds server
 
 ### Run
 
-initialize database schema
+Initialize database schema
 ```shell
 ./sao-ds init
+./sao-procnode init
 ```
 
 server
 ```shell
-./sao-ds --repo=my/server/path --vv run
+./sao-ds [--repo=my/server/path] [--vv] run
 ```
 
 proc
 ```shell
-./sao-procnode --repo=my/proc/path --vv run
+./sao-procnode [--repo=my/proc/path] [--vv] run
 ```
 
 monitor
