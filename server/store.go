@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"golang.org/x/xerrors"
 	"io"
@@ -37,7 +38,7 @@ var formatContentTypeMaps = map[string]string {
 	"CSV" : "text/csv",
 	"JPG":"image/jpeg",
 	"SVG":"image/svg+xml",
-	"MP3":"audio/mp3",
+	"MP3":"audio/mpeg",
 	"MP4":"video/mp4",
 }
 
@@ -58,13 +59,13 @@ var fileExtensionCategories = map[string]model.FileCategory{
 	".asf":  model.Video,
 	".divx": model.Video,
 
-	".jpeg": model.Image,
-	".jpg":  model.Image,
-	".gif":  model.Image,
-	".png":  model.Image,
-	".bmp":  model.Image,
-	".tiff": model.Image,
-	".svg":  model.Image,
+	//".jpeg": model.Image,
+	//".jpg":  model.Image,
+	//".gif":  model.Image,
+	//".png":  model.Image,
+	//".bmp":  model.Image,
+	//".tiff": model.Image,
+	//".svg":  model.Image,
 
 	".pdf":  model.Document,
 	".doc":  model.Document,
@@ -93,7 +94,7 @@ func (s *Server) uploadFile(reader io.Reader, filename string, contentType strin
 
 	// Create a temporary file within our temp-images directory that follows
 	// a particular naming pattern
-	tempFile, err := ioutil.TempFile(tmpPath, filename)
+	tempFile, err := ioutil.TempFile(tmpPath, uuid.New().String())
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -393,7 +394,7 @@ func (s *Server) getFileInfos(ethAddress string, offset int, limit int, category
 	}
 	files, count := s.Model.GetMarketFiles(limit, offset, ethAddress, condition, price)
 	return &model.PagedFileInfoInMarket{
-		FileInfoInMarkets: *files,
+		FileInfoInMarkets: files,
 		Total:             count,
 	}
 }
