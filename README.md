@@ -5,15 +5,15 @@ In Storverse project, we have three parts of service to accomplish the work
 - monitor
   - the project to listen the contract event in ethereum
 - procnode
-  - the node which provide data processing ability, like data encryption and decryption, as well as all possible data processing way like version tracking, provenance... to be expanded.
+  - the node which provide data processing ability, like data encryption and decryption, as well as all possible data processing way like version tracking, provenance... to be expanded
 
 # Getting Started
 
 ### Prerequisites
-The required prerequisites that need to be set up before the workshop.
+The required prerequisites that need to be set up before the workshop
 
 - Install [Go](https://golang.org/doc/install)
-    - Minimum version: 1.16
+    - Minimum version: 1.17
 - IPFS node
 - Mysql
 - Ethereum client provider
@@ -63,14 +63,14 @@ directPeers = ["/ip4/127.0.0.1/tcp/[port_number]/p2p/[peer_id]"]
 ```
 
 ###### ipfs
-ipfs section defines the ipfs node used to upload and download files.
+ipfs section defines the ipfs node used to upload and download files
 
 ###### mysql
 mysql section defines mysql info
 
 ###### apiServer
 apiServer section is used to provide api service.ip, port, contextPath used to construct api server, exposedPath is used to interact with procnode, for example, procnode use the exposedPath to transfer the original file section and encrypted file section.
-previewsPath specify the folder to store the preview of uploaded files. host is the internet address of our service.
+previewsPath specify the folder to store the preview of uploaded files. host is the internet address of our service
 
 ###### libp2p
 directPeers is defined in this section, the peer id and address can be found in logs when you start your procnode service
@@ -90,7 +90,7 @@ blockNumber = [contract_creation_block_number]
 mnemonic = ""
 ```
 ###### monitor
-monitor section is used to listen ethereum event. In this case we deploy contract https://github.com/SaoNetwork/hackathon-contracts/blob/main/contracts/NFT.sol at 0xFA5D30eAC8c9831eCe8b082F2A353Ba86Ee59cb8, from block number 11027543, mnemonic should be filled in config for download event.
+monitor section is used to listen ethereum event. In this case we deploy contract https://github.com/SaoNetwork/hackathon-contracts/blob/main/contracts/NFT.sol at 0xFA5D30eAC8c9831eCe8b082F2A353Ba86Ee59cb8, from block number 11027543, mnemonic should be filled in config for download event
 
 #### procnode
 Create sao-procnode repo, the default repo path is ~/.sao-procnode, you can change it by setting environment var SAO_PROCNODE_PATH or parameter --repo
@@ -125,7 +125,7 @@ mysql section defines mysql info
 transport section defines the attributes of file transport, for example maxTransferDuration defines the time limit of file transport
 
 ###### apiServer
-we use http to transfer file sections between server and procnode, so the api server info should also be included in config.
+we use http to transfer file sections between server and procnode, so the api server info should also be included in config
 
 ###### libp2p
 listenAddresses: the p2p address of ds server
@@ -150,5 +150,5 @@ proc
 
 monitor
 ```shell
-./sao-monitor run
+./sao-monitor [--repo=my/proc/path] run
 ```
