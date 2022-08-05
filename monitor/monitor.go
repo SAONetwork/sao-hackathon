@@ -64,7 +64,7 @@ func (m *Monitor) Run() {
 
 	fmt.Println("listen download status")
 	s := gocron.NewScheduler(time.UTC)
-	s.Every(1).Seconds().Do(func() {
+	s.Every(5).Seconds().Do(func() {
 		finishPurchase, got := m.Model.GetNextPurchaseOrderToFinish()
 		if got {
 			err := m.Finish(int64(finishPurchase.Id))
