@@ -37,7 +37,7 @@ const DECRYPT_SUFFIX = ".decrypt"
 // chain store interface.
 // ipfs, filecoin, arweave should implement.
 type Store interface {
-	StoreFile(ctx context.Context, reader io.Reader) (StoreRet, error)
+	StoreFile(ctx context.Context, reader io.Reader, info map[string]string) (StoreRet, error)
 	GetFile(ctx context.Context, info map[string]string) (io.ReadCloser, error)
 	DeleteFile(ctx context.Context, info map[string]string) error
 }
@@ -75,18 +75,24 @@ type StoreService struct {
 
 type StoreRet struct {
 	IpfsHash string
+	McsInfo  *model.McsInfo
 }
 
 func NewStoreService(config *common.Config, m *model.Model, host host.Host, repodir string) (StoreService, error) {
 	var store Store
-	// ipfs
-	ipfsUrl := fmt.Sprintf("%s:%d", config.Ipfs.Ip, config.Ipfs.Port)
-	if config.Ipfs.ProjectId != "" {
-		// infura
-		store = NewIpfsStoreWithBasicAuth(ipfsUrl, config.Ipfs.ProjectId, config.Ipfs.ProjectSecret)
+
+	if config.Mcs.Enabled {
+		store = NewMcsStore(config.Mcs.Endpoint)
 	} else {
-		// local
-		store = NewIpfsStore(ipfsUrl)
+		// ipfs
+		ipfsUrl := fmt.Sprintf("%s:%d", config.Ipfs.Ip, config.Ipfs.Port)
+		if config.Ipfs.ProjectId != "" {
+			// infura
+			store = NewIpfsStoreWithBasicAuth(ipfsUrl, config.Ipfs.ProjectId, config.Ipfs.ProjectSecret)
+		} else {
+			// local
+			store = NewIpfsStore(ipfsUrl)
+		}
 	}
 	return StoreService{
 		store:     store,
@@ -105,6 +111,7 @@ func (a StoreService) StoreFile(
 	size int64,
 	dest string,
 	duration int64,
+	walletAddr string,
 ) (*model.FileInfo, error) {
 	count, err := a.m.CountFileByFilenameAndStatus(dest, 0)
 	if err != nil {
@@ -114,7 +121,10 @@ func (a StoreService) StoreFile(
 		return nil, errors.New(dest + " exists under ")
 	}
 
-	ret, err := a.store.StoreFile(ctx, reader)
+	storeInfo := map[string]string {
+		"address": walletAddr,
+	}
+	ret, err := a.store.StoreFile(ctx, reader, storeInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -131,10 +141,12 @@ func (a StoreService) StoreFile(
 		ContentType: contentType,
 		Size:        size,
 		ExpireAt:    expireAt,
-		IpfsHash:    ret.IpfsHash,
 		Status:      0,
 	}
-	returnFile, err := a.m.StoreFile(file)
+	if ret.IpfsHash != "" {
+		file.IpfsHash = ret.IpfsHash
+	}
+	returnFile, err := a.m.StoreFile(file, ret.McsInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +234,7 @@ func (a StoreService) GetFile(ctx context.Context, previewId uint, ethAddr strin
 			return nil, nil, err
 		}
 
-		willDecrypt := filePreview.Price.Cmp(decimal.NewFromInt(0))> 0
+		willDecrypt := filePreview.Price.Cmp(decimal.NewFromInt(0)) > 0
 		if willDecrypt {
 			defer read.Close()
 			fileChunkMetadatas := a.m.GetFileChunkMetadatasByFileId(previewId)

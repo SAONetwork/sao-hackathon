@@ -1,26 +1,26 @@
 SHELL=/usr/bin/env bash
 
-#FFI_PATH:=extern/filecoin-ffi/
-#FFI_DEPS:=.install-filcrypto
-#FFI_DEPS:=$(addprefix $(FFI_PATH),$(FFI_DEPS))
+FFI_PATH:=extern/filecoin-ffi/
+FFI_DEPS:=.install-filcrypto
+FFI_DEPS:=$(addprefix $(FFI_PATH),$(FFI_DEPS))
 
-#build/.filecoin-install: $(FFI_PATH)
-	#$(MAKE) -C $(FFI_PATH) $(FFI_DEPS:$(FFI_PATH)%=%)
-#BUILD_DEPS+=build/.filecoin-install
+build/.filecoin-install: $(FFI_PATH)
+	$(MAKE) -C $(FFI_PATH) $(FFI_DEPS:$(FFI_PATH)%=%)
+BUILD_DEPS+=build/.filecoin-install
 
 all: sao-ds sao-monitor sao-procnode
 
 GOCC?=go
 
-sao-ds:
+sao-ds: $(BUILD_DEPS)
 	rm -rf sao-ds 
 	$(GOCC) build -o sao-ds ./cmd/ds 
 
-sao-monitor:
+sao-monitor: $(BUILD_DEPS)
 	rm -rf sao-monitor
 	$(GOCC) build -o sao-monitor ./cmd/monitor
 
-sao-procnode:
+sao-procnode: $(BUILD_DEPS)
 	rm -rf sao-procnode
 	$(GOCC) build -o sao-procnode ./cmd/procnode
 

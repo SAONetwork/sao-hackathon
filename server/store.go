@@ -33,12 +33,12 @@ var fileCategories = map[string]model.FileCategory{
 	"application/zip": model.Document,
 }
 
-var formatContentTypeMaps = map[string]string {
-	"CSV" : "text/csv",
-	"JPG":"image/jpeg",
-	"SVG":"image/svg+xml",
-	"MP3":"audio/mp3",
-	"MP4":"video/mp4",
+var formatContentTypeMaps = map[string]string{
+	"CSV": "text/csv",
+	"JPG": "image/jpeg",
+	"SVG": "image/svg+xml",
+	"MP3": "audio/mp3",
+	"MP4": "video/mp4",
 }
 
 var fileExtensionCategories = map[string]model.FileCategory{
@@ -77,7 +77,7 @@ var fileExtensionCategories = map[string]model.FileCategory{
 	".rtf":  model.Document,
 	".fdr":  model.Document,
 	".zip":  model.Document,
-	".xlsx":  model.Document,
+	".xlsx": model.Document,
 	".csv":  model.Document,
 }
 
@@ -117,12 +117,12 @@ func (s *Server) uploadFile(reader io.Reader, filename string, contentType strin
 	fileCategory := getFileCategory(filepath.Ext(filename))
 
 	filePreview := model.FilePreview{
-		EthAddr:      ethAddress,
-		TmpPath:      tempFileName,
-		ContentType:  contentType,
-		Status:       model.Uploading,
-		Filename:     filename,
-		FileCategory: fileCategory,
+		EthAddr:        ethAddress,
+		TmpPath:        tempFileName,
+		ContentType:    contentType,
+		Status:         model.Uploading,
+		Filename:       filename,
+		FileCategory:   fileCategory,
 		AdditionalInfo: additionalInfo,
 	}
 
@@ -173,7 +173,7 @@ func (s *Server) StoreFileWithPreview(ctx context.Context, preview model.FilePre
 	dir := path.Dir(filePreview.TmpPath)
 	os.MkdirAll(dir, 0666)
 
-	willEncrypt := preview.Price.Cmp(decimal.NewFromInt(0))> 0
+	willEncrypt := preview.Price.Cmp(decimal.NewFromInt(0)) > 0
 
 	// TODO
 	if willEncrypt {
@@ -197,21 +197,30 @@ func (s *Server) StoreFileWithPreview(ctx context.Context, preview model.FilePre
 	}
 
 	fileInfoInMarket := model.FileInfoInMarket{Id: filePreview.Id,
-		CreatedAt:    filePreview.CreatedAt,
-		UpdatedAt:    filePreview.UpdatedAt,
-		EthAddr:      filePreview.EthAddr,
-		Preview:      preview.Preview,
-		Labels:       preview.Labels,
-		Price:        preview.Price,
-		Title:        preview.Title,
-		Description:  preview.Description,
-		ContentType:  filePreview.ContentType,
-		Type:         preview.Type,
-		Status:       model.UploadSuccess,
-		NftTokenId:   filePreview.NftTokenId,
-		FileCategory: filePreview.FileCategory,
+		CreatedAt:      filePreview.CreatedAt,
+		UpdatedAt:      filePreview.UpdatedAt,
+		EthAddr:        filePreview.EthAddr,
+		Preview:        preview.Preview,
+		Labels:         preview.Labels,
+		Price:          preview.Price,
+		Title:          preview.Title,
+		Description:    preview.Description,
+		ContentType:    filePreview.ContentType,
+		Type:           preview.Type,
+		Status:         model.UploadSuccess,
+		NftTokenId:     filePreview.NftTokenId,
+		FileCategory:   filePreview.FileCategory,
 		AdditionalInfo: filePreview.AdditionalInfo,
-		AlreadyPaid:  false}
+		AlreadyPaid:    false}
+
+	fileInfo := s.Model.GetFileInfoByPreviewId(preview.Id)
+	if fileInfo.McsInfoId > 0 {
+		mcsInfo, err := s.Model.GetMcsInfoById(fileInfo.McsInfoId)
+		if err != nil {
+			return nil, xerrors.New("database error")
+		}
+		fileInfoInMarket.WCid = mcsInfo.WCid
+	}
 
 	return &fileInfoInMarket, nil
 }
@@ -290,7 +299,7 @@ func (s *Server) processFileSplitAndEncryption(filePreview *model.FilePreview) {
 
 	log.Infof("uploading to ipfs/filecoin...")
 	duration := int64(-1)
-	dsFile, err := s.StoreService.StoreFile(ctx, storeFile, filePreview.ContentType, encryptFileStat.Size(), file.Name(), duration)
+	dsFile, err := s.StoreService.StoreFile(ctx, storeFile, filePreview.ContentType, encryptFileStat.Size(), file.Name(), duration, filePreview.EthAddr)
 	if err != nil {
 		log.Error(err)
 		return
@@ -333,7 +342,7 @@ func (s *Server) processFreeFile(ctx context.Context, filePreview *model.FilePre
 
 	log.Infof("uploading to ipfs/filecoin...")
 	duration := int64(-1)
-	dsFile, err := s.StoreService.StoreFile(ctx, file, filePreview.ContentType, fileSize, file.Name(), duration)
+	dsFile, err := s.StoreService.StoreFile(ctx, file, filePreview.ContentType, fileSize, file.Name(), duration, filePreview.EthAddr)
 	if err != nil {
 		log.Error(err)
 		return
@@ -412,7 +421,7 @@ func (s *Server) checkFileStatus(fileId uint, ethAddress string) error {
 	if err != nil {
 		return errors.New("file id not found in system")
 	}
-	if filePreview.Price.Cmp(decimal.NewFromInt(0))> 0 && filePreview.EthAddr != ethAddress {
+	if filePreview.Price.Cmp(decimal.NewFromInt(0)) > 0 && filePreview.EthAddr != ethAddress {
 		purchaseOrder := s.Model.GetPurchaseOrder(fileId, ethAddress)
 		if purchaseOrder.Id == 0 {
 			return errors.New("not purchased")

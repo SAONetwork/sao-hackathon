@@ -49,7 +49,7 @@ func (t authTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	return t.RoundTripper.RoundTrip(r)
 }
 
-func (s IpfsStore) StoreFile(ctx context.Context, reader io.Reader) (StoreRet, error) {
+func (s IpfsStore) StoreFile(ctx context.Context, reader io.Reader, info map[string]string) (StoreRet, error) {
 	hash, err := s.shell.Add(reader)
 	if err != nil {
 		return StoreRet{}, err

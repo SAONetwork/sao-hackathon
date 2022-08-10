@@ -13,9 +13,19 @@ type FileInfo struct {
 	Size            int64
 	ExpireAt        int64  `json:"-" gorm:"column:expireAt"`
 	IpfsHash        string `json:"ipfsHash" gorm:"column:ipfsHash;type:varchar(255) ;default:''"`
+	McsInfoId       uint
 	Cid             string `json:"cid" gorm:"column:cid;type:varchar(255) ;default:''"`
 	StorageProvider string `json:"storageProvider" gorm:"column:storageProvider;type:varchar(255) ;default:''"`
 	Status          uint   `json:"-" gorm:"column:status;type:int(11)"`
+}
+
+type McsInfo struct {
+	SaoModel
+	SourceFileUploadId string
+	PayloadCid         string
+	IpfsUrl            string
+	FileSize           int64
+	WCid               string
 }
 
 type FileInfoInMarket struct {
@@ -36,6 +46,7 @@ type FileInfoInMarket struct {
 	AlreadyPaid    bool
 	AdditionalInfo string
 	FileExtension  string
+	WCid           string
 }
 
 type FileDetail struct {
@@ -66,15 +77,27 @@ func (model *Model) GetFileInfoByPreviewId(fileId uint) *FileInfo {
 	return &file
 }
 
-func (model *Model) StoreFile(file FileInfo) (*FileInfo, error) {
+func (model *Model) StoreFile(file FileInfo, mcsInfo *McsInfo) (*FileInfo, error) {
 	var count int64
 	err := model.DB.Transaction(func(tx *gorm.DB) error {
-		tx.Model(&FileInfo{}).Where("ipfsHash = ? and status = 0", file.IpfsHash).Count(&count)
-		if count <= 0 {
+		exists := false
+		if file.IpfsHash != "" {
+			tx.Model(&FileInfo{}).Where("ipfsHash = ? and status = 0", file.IpfsHash).Count(&count)
+			exists = count > 0
+		} else if mcsInfo != nil {
+			// TODO: check mcsinfo exists.
+		}
+		if !exists {
+			if mcsInfo != nil {
+				if err := model.DB.Create(mcsInfo).Error; err != nil {
+					return err
+				}
+
+				file.McsInfoId = mcsInfo.Id
+			}
 			if err := tx.Create(&file).Error; err != nil {
 				return err
 			}
-
 		} else {
 			if err := model.DB.Model(&FileInfo{}).Where("ipfsHash = ?", file.IpfsHash).Update("filename", file.Filename).Error; err != nil {
 				return err
@@ -85,5 +108,18 @@ func (model *Model) StoreFile(file FileInfo) (*FileInfo, error) {
 		return nil
 	})
 	return &file, err
+}
 
+func (model *Model) StoreMcsInfo(info *McsInfo) (*McsInfo, error) {
+	err := model.DB.Create(info).Error
+	return info, err
+}
+
+func (model *Model) GetMcsInfoById(id uint) (*McsInfo, error) {
+	var info McsInfo
+	result := model.DB.First(&info, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &info, nil
 }

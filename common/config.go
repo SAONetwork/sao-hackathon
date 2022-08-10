@@ -47,13 +47,20 @@ type Config struct {
 	Libp2p       Libp2p
 	PreviewsPath string
 	Transport    Transport
+	Mcs          McsInfo
 }
 
 type IpfsInfo struct {
+	Enabled       bool
 	Ip            string
 	Port          int
 	ProjectId     string
 	ProjectSecret string
+}
+
+type McsInfo struct {
+	Enabled  bool
+	Endpoint string
 }
 
 func GetConfig(cfgPath string) (*Config, error) {

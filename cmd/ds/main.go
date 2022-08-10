@@ -111,6 +111,9 @@ var initCmd = &cli.Command{
 		if err = db.AutoMigrate(&model.FileChunkMetadata{}); err != nil {
 			return err
 		}
+		if err = db.AutoMigrate(&model.McsInfo{}); err != nil {
+			return err
+		}
 
 		log.Info("initialize saods succeed.")
 

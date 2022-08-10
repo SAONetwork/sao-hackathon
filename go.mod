@@ -23,6 +23,7 @@ require (
 )
 
 require (
+	github.com/btcsuite/btcd v0.22.0-beta
 	github.com/ethereum/go-ethereum v1.10.20
 	github.com/google/uuid v1.3.0
 	github.com/gwaylib/log v0.0.0-20220419074212-f1aa63899ff1
@@ -34,6 +35,7 @@ require (
 	github.com/ipfs/go-ipld-format v0.2.0
 	github.com/ipfs/go-merkledag v0.5.1
 	github.com/ipld/go-car v0.3.3
+	github.com/ipsn/go-secp256k1 v0.0.0-20180726113642-9d62b9f0bc52
 	github.com/jpillora/backoff v1.0.0
 	github.com/libp2p/go-libp2p-gostream v0.3.2-0.20220309102559-3d4abe2a19ac
 	github.com/libp2p/go-libp2p-http v0.2.1
@@ -55,7 +57,6 @@ require (
 	github.com/akavel/rsrc v0.8.0 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/btcsuite/btcd v0.22.0-beta // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/buger/goterm v1.0.3 // indirect
@@ -180,7 +181,6 @@ require (
 	github.com/ipld/go-codec-dagpb v1.3.2 // indirect
 	github.com/ipld/go-ipld-prime v0.16.0 // indirect
 	github.com/ipld/go-ipld-selector-text-lite v0.0.1 // indirect
-	github.com/ipsn/go-secp256k1 v0.0.0-20180726113642-9d62b9f0bc52 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jbenet/go-temp-err-catcher v0.1.0 // indirect
 	github.com/jbenet/goprocess v0.1.4 // indirect
@@ -340,7 +340,7 @@ require (
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.1
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
 	github.com/whyrusleeping/base32 v0.0.0-20170828182744-c30ac30633cc
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	golang.org/x/net v0.0.0-20220607020251-c690dde0001d
 	golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e // indirect
 	golang.org/x/tools v0.1.11 // indirect

@@ -820,7 +820,6 @@ github.com/ipfs/go-ipfs-blockstore v1.0.4/go.mod h1:uL7/gTJ8QIZ3MtA3dWf+s1a0U3fJ
 github.com/ipfs/go-ipfs-blockstore v1.1.1/go.mod h1:w51tNR9y5+QXB0wkNcHt4O2aSZjTdqaEWaQdSxEyUOY=
 github.com/ipfs/go-ipfs-blockstore v1.1.2 h1:WCXoZcMYnvOTmlpX+RSSnhVN0uCmbWTeepTGX5lgiXw=
 github.com/ipfs/go-ipfs-blockstore v1.1.2/go.mod h1:w51tNR9y5+QXB0wkNcHt4O2aSZjTdqaEWaQdSxEyUOY=
-github.com/ipfs/go-ipfs-blockstore v1.2.0/go.mod h1:eh8eTFLiINYNSNawfZOC7HOxNTxpB1PFuA5E1m/7exE=
 github.com/ipfs/go-ipfs-blocksutil v0.0.1 h1:Eh/H4pc1hsvhzsQoMEP3Bke/aW5P5rVM1IWFJMcGIPQ=
 github.com/ipfs/go-ipfs-blocksutil v0.0.1/go.mod h1:Yq4M86uIOmxmGPUHv/uI7uKqZNtLb449gwKqXjIsnRk=
 github.com/ipfs/go-ipfs-chunker v0.0.1/go.mod h1:tWewYK0we3+rMbOh7pPFGDyypCtvGcBFymgY4rSDLAw=
@@ -879,8 +878,6 @@ github.com/ipfs/go-ipld-format v0.0.1/go.mod h1:kyJtbkDALmFHv3QR6et67i35QzO3S0dC
 github.com/ipfs/go-ipld-format v0.0.2/go.mod h1:4B6+FM2u9OJ9zCV+kSbgFAZlOrv1Hqbf0INGQgiKf9k=
 github.com/ipfs/go-ipld-format v0.2.0 h1:xGlJKkArkmBvowr+GMCX0FEZtkro71K1AwiKnL37mwA=
 github.com/ipfs/go-ipld-format v0.2.0/go.mod h1:3l3C1uKoadTPbeNfrDi+xMInYKlx2Cvg1BuydPSdzQs=
-github.com/ipfs/go-ipld-format v0.3.0/go.mod h1:co/SdBE8h99968X0hViiw1MNlh6fvxxnHpvVLnH7jSM=
-github.com/ipfs/go-ipld-format v0.4.0/go.mod h1:co/SdBE8h99968X0hViiw1MNlh6fvxxnHpvVLnH7jSM=
 github.com/ipfs/go-ipld-git v0.1.1/go.mod h1:+VyMqF5lMcJh4rwEppV0e6g4nCCHXThLYYDpKUkJubI=
 github.com/ipfs/go-ipld-legacy v0.1.0/go.mod h1:86f5P/srAmh9GcIcWQR9lfFLZPrIyyXQeVlOWeeWEuI=
 github.com/ipfs/go-ipld-legacy v0.1.1 h1:BvD8PEuqwBHLTKqlGFTHSwrwFOMkVESEvwIYwR2cdcc=
@@ -1940,8 +1937,8 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
-github.com/stretchr/testify v1.7.2 h1:4jaiDzPyXQvSd7D0EjG45355tLlV3VOECpq10pLC+8s=
 github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1FQKckRals=
+github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/syndtr/goleveldb v1.0.0/go.mod h1:ZVVdQEZoIme9iO1Ch2Jdy24qqXrMMOU6lpPAyBWyWuQ=
 github.com/syndtr/goleveldb v1.0.1-0.20210305035536-64b5b1c73954/go.mod h1:u2MKkTVTVJWe5D1rCvame8WqhBd88EuIwODJZ1VHCPM=
