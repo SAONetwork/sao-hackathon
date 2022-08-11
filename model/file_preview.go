@@ -127,7 +127,7 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 	return &filesInfoInMarket, nil
 }
 
-func (model *Model) GetMarketFiles(limit int, offset int, ethAddress string, condition map[string]interface{}, price int) (*[]FileInfoInMarket, int64) {
+func (model *Model) GetMarketFiles(limit int, offset int, ethAddress string, condition map[string]interface{}, price int) ([]FileInfoInMarket, int64) {
 	var filePreviews []FilePreview
 	if price > 0 {
 		model.DB.Offset(offset).Limit(limit).Model(&FilePreview{}).Where("status = 2").Where("price > 0 and nft_token_id > 0").Where(condition).Order("created_at desc").Find(&filePreviews)
@@ -178,7 +178,7 @@ func (model *Model) GetMarketFiles(limit int, offset int, ethAddress string, con
 			FileExtension: fileExtension,
 			AlreadyPaid:  paid})
 	}
-	return &filesInfoInMarket, count
+	return filesInfoInMarket, count
 }
 
 func (model *Model) UpdatePreviewLinkedWithIpfs(Id uint, updates map[string]interface{}) error {

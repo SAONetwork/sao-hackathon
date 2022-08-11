@@ -13,7 +13,7 @@ type FileInfo struct {
 	Size            int64
 	ExpireAt        int64  `json:"-" gorm:"column:expireAt"`
 	IpfsHash        string `json:"ipfsHash" gorm:"column:ipfsHash;type:varchar(255) ;default:''"`
-	McsInfoId       uint
+	McsInfoId       uint   `json:"mcsInfoId" gorm:"column:mcsInfoId"`
 	Cid             string `json:"cid" gorm:"column:cid;type:varchar(255) ;default:''"`
 	StorageProvider string `json:"storageProvider" gorm:"column:storageProvider;type:varchar(255) ;default:''"`
 	Status          uint   `json:"-" gorm:"column:status;type:int(11)"`
@@ -21,7 +21,7 @@ type FileInfo struct {
 
 type McsInfo struct {
 	SaoModel
-	SourceFileUploadId string
+	SourceFileUploadId int64
 	PayloadCid         string
 	IpfsUrl            string
 	FileSize           int64
@@ -73,7 +73,7 @@ func (model *Model) CountFileByFilenameAndStatus(dest string, status int) (int64
 
 func (model *Model) GetFileInfoByPreviewId(fileId uint) *FileInfo {
 	var file FileInfo
-	model.DB.Raw("SELECT i.id, i.contentType, i.ipfsHash, p.filename FROM file_infos i, file_previews p WHERE p.file_id = i.id and p.id = ?", fileId).Scan(&file)
+	model.DB.Raw("SELECT i.id, i.contentType, i.ipfsHash, p.filename, i.mcsInfoId FROM file_infos i, file_previews p WHERE p.file_id = i.id and p.id = ?", fileId).Scan(&file)
 	return &file
 }
 

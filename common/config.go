@@ -59,8 +59,12 @@ type IpfsInfo struct {
 }
 
 type McsInfo struct {
-	Enabled  bool
-	Endpoint string
+	Enabled         bool
+	McsEndpoint     string
+	StorageEndpoint string
+	PrivateKey      string
+	EnableFilecoin  bool
+	ProviderRpc     string
 }
 
 func GetConfig(cfgPath string) (*Config, error) {

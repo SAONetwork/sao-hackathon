@@ -82,7 +82,7 @@ func NewStoreService(config *common.Config, m *model.Model, host host.Host, repo
 	var store Store
 
 	if config.Mcs.Enabled {
-		store = NewMcsStore(config.Mcs.Endpoint)
+		store = NewMcsStore(config.Mcs)
 	} else {
 		// ipfs
 		ipfsUrl := fmt.Sprintf("%s:%d", config.Ipfs.Ip, config.Ipfs.Port)
@@ -121,8 +121,9 @@ func (a StoreService) StoreFile(
 		return nil, errors.New(dest + " exists under ")
 	}
 
-	storeInfo := map[string]string {
-		"address": walletAddr,
+	storeInfo := map[string]string{
+		"address":  walletAddr,
+		"filename": dest,
 	}
 	ret, err := a.store.StoreFile(ctx, reader, storeInfo)
 	if err != nil {
@@ -220,15 +221,24 @@ func (a StoreService) GetFile(ctx context.Context, previewId uint, ethAddr strin
 	}
 
 	file := a.m.GetFileInfoByPreviewId(previewId)
-	if file.IpfsHash == "" {
-		return file, nil, errors.New("missing ipfs hash")
+	ipfsHash := file.IpfsHash
+	if ipfsHash == "" {
+		if file.McsInfoId <= 0 {
+			return file, nil, errors.New("missing ipfs hash")
+		} else {
+			mcsInfo, err := a.m.GetMcsInfoById(file.McsInfoId)
+			if err != nil {
+				return file, nil, errors.New("missing ipfs hash")
+			}
+			ipfsHash = mcsInfo.IpfsUrl
+		}
 	}
 
 	filePath := filepath.Join(node.StageProcPath(a.repodir), filepath.Base(file.Filename))
 	var originalFile *os.File
 	if _, err = os.Stat(filePath + ORIGINAL_SUFFIX); errors.Is(err, os.ErrNotExist) {
 		read, err := a.store.GetFile(ctx, map[string]string{
-			"hash": file.IpfsHash,
+			"hash": ipfsHash,
 		})
 		if err != nil {
 			return nil, nil, err

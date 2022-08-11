@@ -1,94 +1,66 @@
 package store
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"golang.org/x/xerrors"
 	"io"
-	"io/ioutil"
-	"mime/multipart"
 	"net/http"
+	"sao-datastore-storage/common"
+	go_mcs_sdk "sao-datastore-storage/go-mcs-sdk"
 	"sao-datastore-storage/model"
 )
-
-type UploadResp struct {
-	Status  string     `json:"status"`
-	Data    UploadData `json:"data"`
-	Message string     `json:"message"`
-}
-
-type UploadData struct {
-	SourceFileUploadId string `json:"source_file_upload_id"`
-	PayloadCid         string `json:"payload_cid"`
-	IpfsUrl            string `json:"ipfs_url"`
-	FileSize           int64  `json:"file_size"`
-	WCid               string `json:"w_cid"`
-}
 
 const MCS_DURATION = "525"
 const MCS_FILE_TYPE = "0"
 
 type McsStore struct {
-	endpoint string
+	enableFilecoin bool
+	mcsClient      go_mcs_sdk.McsClient
 }
 
-func NewMcsStore(endpoint string) McsStore {
+func NewMcsStore(config common.McsInfo) McsStore {
+	mcsClient := go_mcs_sdk.McsClient{
+		McsEndpoint:     config.McsEndpoint,
+		StorageEndpoint: config.StorageEndpoint,
+		// TODO:
+		Address: "",
+	}
 	return McsStore{
-		endpoint: endpoint,
+		mcsClient:      mcsClient,
+		enableFilecoin: config.EnableFilecoin,
 	}
 }
 
 func (s McsStore) StoreFile(ctx context.Context, reader io.Reader, info map[string]string) (StoreRet, error) {
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	fw, err := writer.CreateFormFile("file", "cover.jpg")
+	jsonResp, err := s.mcsClient.Upload(info["filename"], reader, map[string]string{
+		"duration": MCS_DURATION,
+		"fileType": MCS_FILE_TYPE,
+	})
 	if err != nil {
 		return StoreRet{}, err
 	}
 
-	_, err = io.Copy(fw, reader)
-	if err != nil {
-		return StoreRet{}, err
-	}
-	writer.WriteField("duration", MCS_DURATION)
-	writer.WriteField("file_type", MCS_FILE_TYPE)
-	writer.WriteField("wallet_address", info["address"])
-
-	err = writer.Close()
-	if err != nil {
-		return StoreRet{}, err
+	mcsInfo := model.McsInfo{
+		SourceFileUploadId: jsonResp.Data.SourceFileUploadId,
+		PayloadCid:         jsonResp.Data.PayloadCid,
+		IpfsUrl:            jsonResp.Data.IpfsUrl,
+		FileSize:           jsonResp.Data.FileSize,
+		WCid:               jsonResp.Data.WCid,
 	}
 
-	resp, err := http.Post(s.endpoint+"/storage/ipfs/upload", writer.FormDataContentType(), body)
-	if err != nil {
-		return StoreRet{}, err
+	if s.enableFilecoin {
+		// TODO: pay and filecoin store.
 	}
-	resBody, err := ioutil.ReadAll(resp.Body)
-
-	jsonResp := UploadResp{}
-	if err = json.Unmarshal(resBody, &jsonResp); err != nil {
-		return StoreRet{}, err
-	}
-
-	if jsonResp.Status == "success" {
-		mcsInfo := model.McsInfo{
-			SourceFileUploadId: jsonResp.Data.SourceFileUploadId,
-			PayloadCid:         jsonResp.Data.PayloadCid,
-			IpfsUrl:            jsonResp.Data.IpfsUrl,
-			FileSize:           jsonResp.Data.FileSize,
-			WCid:               jsonResp.Data.WCid,
-		}
-
-		return StoreRet{
-			McsInfo: &mcsInfo,
-		}, nil
-	} else {
-		return StoreRet{}, xerrors.New(jsonResp.Message)
-	}
+	return StoreRet{
+		McsInfo: &mcsInfo,
+	}, nil
 }
 func (s McsStore) GetFile(ctx context.Context, info map[string]string) (io.ReadCloser, error) {
-	return nil, nil
+	resp, err := http.Get(info["hash"])
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Body, nil
 }
 
 func (s McsStore) DeleteFile(ctx context.Context, info map[string]string) error {
