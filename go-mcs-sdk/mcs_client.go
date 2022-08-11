@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
@@ -27,7 +28,6 @@ type UploadResp struct {
 	Data    UploadData `json:"data"`
 	Message string     `json:"message"`
 }
-
 type UploadData struct {
 	SourceFileUploadId int64  `json:"source_file_upload_id"`
 	PayloadCid         string `json:"payload_cid"`
@@ -37,23 +37,22 @@ type UploadData struct {
 }
 
 type StatsResp struct {
-	Data StatsData `json:"data"`
+	Data   StatsData `json:"data"`
+	Status string    `json:"status"`
+}
+type StatsData struct {
+	AverageCostPushMessage           string `json:"average_cost_push_message"`
+	AverageDataCostSealing1TB        string `json:"average_data_cost_sealing_1TB"`
+	AverageGasCostSealing1TB         string `json:"average_gas_cost_sealing_1TB"`
+	AverageMinPieceSize              string `json:"average_min_piece_size"`
+	AveragePricePerGBPerYear         string `json:"average_price_per_GB_per_year"`
+	AverageVerifiedPricePerGBPerYear string `json:"average_verified_price_per_GB_per_year"`
 }
 
 type BillingResp struct {
 	Status string `json:"status"`
 	Code   string `json:"code"`
 	Data   int    `json:"data"`
-}
-
-type StatsData struct {
-	AverageCostPushMessage           string
-	AverageDataCostSealing1TB        string
-	AverageGasCostSealing1TB         string
-	AverageMinPieceSize              string
-	AveragePricePerGBPerYear         string
-	AverageVerifiedPricePerGBPerYear string
-	Status                           string
 }
 
 type ParamResp struct {
@@ -82,11 +81,13 @@ type McsClient struct {
 	ParamData       *ParamData
 }
 
-func NewMscClient(url string) *McsClient {
+func NewMcsClient(url string, mcsEndpoint string, storageEndpoint string) *McsClient {
 	provider, _ := web3.NewProvider(url)
 	s := McsClient{
-		McsEndpoint:     "https://mcs-api.filswan.com/api/v1",
-		StorageEndpoint: "https://api.filswan.com",
+		//McsEndpoint:     "https://mcs-api.filswan.com/api/v1",
+		//StorageEndpoint: "https://api.filswan.com",
+		McsEndpoint:     mcsEndpoint,
+		StorageEndpoint: storageEndpoint,
 		Provider:        provider,
 	}
 	s.USDC, _ = abi.JSON(strings.NewReader(ERC20_ABI))
@@ -167,7 +168,7 @@ func (s McsClient) getParams() (*ParamData, error) {
 	return &jsonResp.Data, nil
 }
 
-func (s McsClient) getAverageAmount(walletAddress string, fileSize int, duration int) (string, error) {
+func (s McsClient) getAverageAmount(walletAddress string, fileSize int64, duration int) (string, error) {
 	fileSizeInGB := float64(fileSize) / math.Pow10(9)
 	storageCostPerUnit := float64(0)
 
@@ -216,6 +217,7 @@ func (s McsClient) getAverageAmount(walletAddress string, fileSize int, duration
 
 	billingPrice = billingJsonResp.Data
 
+	fmt.Printf("fileSizeInGB: %v, storageCostPerUnit: %v, duration: %d, billingPrice: %v", fileSizeInGB, storageCostPerUnit, duration, billingPrice)
 	price := decimal.NewFromFloat(fileSizeInGB * storageCostPerUnit * float64(duration*5*billingPrice) / 365)
 	numberPrice := price.Truncate(9)
 	if numberPrice.Cmp(decimal.Zero) > 0 {
@@ -225,7 +227,7 @@ func (s McsClient) getAverageAmount(walletAddress string, fileSize int, duration
 	}
 }
 
-func (s McsClient) MakePayment(wCid string, size int, duration int) (string, error) {
+func (s McsClient) MakePayment(wCid string, size int64, duration int) (string, error) {
 	amount, err := s.getAverageAmount(s.Address.Hex(), size, duration)
 	if err != nil {
 		return "", err
@@ -293,7 +295,7 @@ func (s *McsClient) approve(amount *big.Int) (*common.Hash, error) {
 	return s.CallContrat(common.HexToAddress(s.ParamData.UsdcAddress), approveMethod, params)
 }
 
-func (s *McsClient) lockToken(cid string, min_amount *big.Int, size int) (*common.Hash, error) {
+func (s *McsClient) lockToken(cid string, min_amount *big.Int, size int64) (*common.Hash, error) {
 
 	paymentMethod := s.Payment.Methods["lockTokenPayment"]
 	var amount *big.Int
@@ -304,7 +306,7 @@ func (s *McsClient) lockToken(cid string, min_amount *big.Int, size int) (*commo
 		Amount:     amount,
 		LockTime:   big.NewInt(int64(86400 * s.ParamData.LockTime)),
 		Recipient:  common.HexToAddress(s.ParamData.PaymentRecipientAddress),
-		Size:       big.NewInt(int64(size)),
+		Size:       big.NewInt(size),
 		CopyLimit:  5,
 	}
 	return s.CallContrat(common.HexToAddress(s.ParamData.PaymentContractAddress), paymentMethod, []interface{}{payment})

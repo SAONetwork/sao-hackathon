@@ -8,7 +8,7 @@ import (
 
 func TestApprove(t *testing.T) {
 
-	s := NewMscClient("https://rpc-mumbai.maticvigil.com")
+	s := NewMcsClient("https://rpc-mumbai.maticvigil.com")
 	err := s.SetAccount("")
 	if err != nil {
 		t.Errorf("failed to set account: %s", err.Error())
@@ -26,7 +26,7 @@ func TestApprove(t *testing.T) {
 
 func TestLock(t *testing.T) {
 
-	s := NewMscClient("https://rpc-mumbai.maticvigil.com")
+	s := NewMcsClient("https://rpc-mumbai.maticvigil.com")
 	err := s.SetAccount("")
 	if err != nil {
 		t.Errorf("failed to set account: %s", err.Error())

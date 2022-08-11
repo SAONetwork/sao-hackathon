@@ -26,6 +26,7 @@ type McsInfo struct {
 	IpfsUrl            string
 	FileSize           int64
 	WCid               string
+	PaymentTxHash      string
 }
 
 type FileInfoInMarket struct {

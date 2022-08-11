@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"sao-datastore-storage/common"
@@ -9,21 +10,17 @@ import (
 	"sao-datastore-storage/model"
 )
 
-const MCS_DURATION = "525"
-const MCS_FILE_TYPE = "0"
+const MCS_DURATION = 525
+const MCS_FILE_TYPE = 0
 
 type McsStore struct {
 	enableFilecoin bool
-	mcsClient      go_mcs_sdk.McsClient
+	mcsClient      *go_mcs_sdk.McsClient
 }
 
 func NewMcsStore(config common.McsInfo) McsStore {
-	mcsClient := go_mcs_sdk.McsClient{
-		McsEndpoint:     config.McsEndpoint,
-		StorageEndpoint: config.StorageEndpoint,
-		// TODO:
-		Address: "",
-	}
+	mcsClient := go_mcs_sdk.NewMcsClient(config.ProviderRpc, config.McsEndpoint, config.StorageEndpoint)
+	mcsClient.SetAccount(config.PrivateKey)
 	return McsStore{
 		mcsClient:      mcsClient,
 		enableFilecoin: config.EnableFilecoin,
@@ -32,8 +29,8 @@ func NewMcsStore(config common.McsInfo) McsStore {
 
 func (s McsStore) StoreFile(ctx context.Context, reader io.Reader, info map[string]string) (StoreRet, error) {
 	jsonResp, err := s.mcsClient.Upload(info["filename"], reader, map[string]string{
-		"duration": MCS_DURATION,
-		"fileType": MCS_FILE_TYPE,
+		"duration": fmt.Sprintf("%d", MCS_DURATION),
+		"fileType": fmt.Sprintf("%d", MCS_FILE_TYPE),
 	})
 	if err != nil {
 		return StoreRet{}, err
@@ -46,9 +43,12 @@ func (s McsStore) StoreFile(ctx context.Context, reader io.Reader, info map[stri
 		FileSize:           jsonResp.Data.FileSize,
 		WCid:               jsonResp.Data.WCid,
 	}
-
 	if s.enableFilecoin {
-		// TODO: pay and filecoin store.
+		tx, err := s.mcsClient.MakePayment(jsonResp.Data.WCid, jsonResp.Data.FileSize, MCS_DURATION)
+		if err != nil {
+			return StoreRet{}, err
+		}
+		mcsInfo.PaymentTxHash = tx
 	}
 	return StoreRet{
 		McsInfo: &mcsInfo,

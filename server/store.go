@@ -343,7 +343,7 @@ func (s *Server) processFreeFile(ctx context.Context, filePreview *model.FilePre
 
 	log.Infof("uploading to ipfs/filecoin...")
 	duration := int64(-1)
-	dsFile, err := s.StoreService.StoreFile(ctx, file, filePreview.ContentType, fileSize, file.Name(), duration, filePreview.EthAddr)
+	dsFile, err := s.StoreService.StoreFile(ctx, file, filePreview.ContentType, fileSize, filePreview.Filename, duration, filePreview.EthAddr)
 	if err != nil {
 		log.Error(err)
 		return
