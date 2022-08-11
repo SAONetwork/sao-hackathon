@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
@@ -233,6 +234,7 @@ func (s McsClient) MakePayment(wCid string, size int, duration int) (string, err
 	payAmount, _ := new(big.Float).SetString(amount)
 	var minPayment *big.Int
 	minPayment, _ = new(big.Float).Mul(payAmount, big.NewFloat(1000000000000000000.0)).Int(minPayment)
+	fmt.Println(minPayment, amount)
 	allowance := s.queryAllowance()
 	if allowance.Cmp(minPayment) <= 0 {
 		s.approve(new(big.Int).Mul(minPayment, big.NewInt(10)))
@@ -262,7 +264,7 @@ type Payment struct {
 	CopyLimit  uint8
 }
 
-func (s *McsClient) CallContrat(to common.Address, method abi.Method, params []interface{}) (*common.Hash, error) {
+func (s *McsClient) CallContract(to common.Address, method abi.Method, params []interface{}) (*common.Hash, error) {
 	nonce, _ := s.Provider.GetNonce(s.Address)
 	gasPrice, _ := s.Provider.Getgasprice()
 	var buf bytes.Buffer
@@ -290,7 +292,7 @@ func (s *McsClient) CallContrat(to common.Address, method abi.Method, params []i
 func (s *McsClient) approve(amount *big.Int) (*common.Hash, error) {
 	approveMethod := s.USDC.Methods["approve"]
 	params := []interface{}{common.HexToAddress(s.ParamData.PaymentContractAddress), amount}
-	return s.CallContrat(common.HexToAddress(s.ParamData.UsdcAddress), approveMethod, params)
+	return s.CallContract(common.HexToAddress(s.ParamData.UsdcAddress), approveMethod, params)
 }
 
 func (s *McsClient) lockToken(cid string, min_amount *big.Int, size int) (*common.Hash, error) {
@@ -307,5 +309,5 @@ func (s *McsClient) lockToken(cid string, min_amount *big.Int, size int) (*commo
 		Size:       big.NewInt(int64(size)),
 		CopyLimit:  5,
 	}
-	return s.CallContrat(common.HexToAddress(s.ParamData.PaymentContractAddress), paymentMethod, []interface{}{payment})
+	return s.CallContract(common.HexToAddress(s.ParamData.PaymentContractAddress), paymentMethod, []interface{}{payment})
 }
