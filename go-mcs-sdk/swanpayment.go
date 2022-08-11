@@ -1,4 +1,4 @@
-package abi
+package go_mcs_sdk
 
 const SWAN_PAYMENT_ABI = `
 [

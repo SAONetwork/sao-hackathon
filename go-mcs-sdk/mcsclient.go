@@ -2,16 +2,25 @@ package go_mcs_sdk
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"encoding/json"
-	"github.com/shopspring/decimal"
-	"golang.org/x/xerrors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
+	"math/big"
 	"mime/multipart"
 	"net/http"
+	"sao-datastore-storage/web3"
 	"strconv"
 	"strings"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/shopspring/decimal"
+	"golang.org/x/xerrors"
 )
 
 type UploadResp struct {
@@ -66,14 +75,34 @@ type ParamData struct {
 type McsClient struct {
 	McsEndpoint     string
 	StorageEndpoint string
-	Address         string
-	PrivateKey      string
+	Address         common.Address
+	PrivateKey      *ecdsa.PrivateKey
+	USDC            abi.ABI
+	Payment         abi.ABI
+	Provider        *web3.Provider
+	ParamData       *ParamData
 }
 
-func (s McsClient) SetAccount(privateKey string) {
-	s.PrivateKey = privateKey
-	// TODO:
-	//s.Address =
+func NewMscClient(url string) *McsClient {
+	provider, _ := web3.NewProvider(url)
+	s := McsClient{
+		McsEndpoint:     "https://mcs-api.filswan.com/api/v1",
+		StorageEndpoint: "https://api.filswan.com",
+		Provider:        provider,
+	}
+	s.USDC, _ = abi.JSON(strings.NewReader(ERC20_ABI))
+	s.Payment, _ = abi.JSON(strings.NewReader(SWAN_PAYMENT_ABI))
+	s.ParamData, _ = s.getParams()
+	return &s
+}
+
+func (s *McsClient) SetAccount(privateKey string) (err error) {
+	s.PrivateKey, err = crypto.HexToECDSA(privateKey)
+	if err != nil {
+		return err
+	}
+	s.Address = crypto.PubkeyToAddress(s.PrivateKey.PublicKey)
+	return nil
 }
 
 func (s McsClient) Upload(filename string, reader io.Reader, options map[string]string) (*UploadResp, error) {
@@ -94,7 +123,7 @@ func (s McsClient) Upload(filename string, reader io.Reader, options map[string]
 	if err = writer.WriteField("file_type", options["fileType"]); err != nil {
 		return nil, err
 	}
-	if err = writer.WriteField("wallet_address", s.Address); err != nil {
+	if err = writer.WriteField("wallet_address", s.Address.Hex()); err != nil {
 		return nil, err
 	}
 
@@ -198,7 +227,7 @@ func (s McsClient) getAverageAmount(walletAddress string, fileSize int, duration
 }
 
 func (s McsClient) MakePayment(wCid string, size int, duration int) (string, error) {
-	amount, err := s.getAverageAmount(s.Address, size, duration)
+	amount, err := s.getAverageAmount(s.Address.Hex(), size, duration)
 	if err != nil {
 		return "", err
 	}
@@ -213,4 +242,76 @@ func (s McsClient) MakePayment(wCid string, size int, duration int) (string, err
 
 func (s McsClient) lockToken(wCid string, amount string, size int) (string, error) {
 	return "", nil
+}
+
+func (s *McsClient) queryAllowance() *big.Int {
+	fmt.Println(s.Address)
+	result, err := s.Provider.Call(common.HexToAddress(s.ParamData.UsdcAddress), s.USDC.Methods["allowance"], []interface{}{s.Address, common.HexToAddress(s.ParamData.PaymentContractAddress)}, nil)
+	if err != nil {
+		return nil
+	}
+	return new(big.Int).SetBytes(result)
+}
+
+type Payment struct {
+	Id         string
+	MinPayment *big.Int
+	Amount     *big.Int
+	LockTime   *big.Int
+	Recipient  common.Address
+	Size       *big.Int
+	CopyLimit  uint8
+}
+
+func (s *McsClient) approve(amount *big.Int) error {
+	nonce, _ := s.Provider.GetNonce(s.Address)
+	gasPrice, _ := s.Provider.Getgasprice()
+	var buf bytes.Buffer
+	approveMethod := s.USDC.Methods["approve"]
+	buf.Write(approveMethod.ID)
+	params, err := approveMethod.Inputs.Pack(common.HexToAddress(s.ParamData.PaymentContractAddress), amount)
+	if err != nil {
+		return err
+	}
+	buf.Write(params)
+	tx := types.NewTransaction(nonce, common.HexToAddress(s.ParamData.UsdcAddress), big.NewInt(0), uint64(50000), gasPrice, buf.Bytes())
+	signed, err := types.SignTx(tx, types.NewEIP155Signer(big.NewInt(80001)), s.PrivateKey)
+	if err != nil {
+		return nil
+	}
+	fmt.Println(signed.Hash().Hex())
+	return s.Provider.SendTx(signed)
+}
+
+func (s *McsClient) LockToken(cid string, min_amount *big.Int, size int) error {
+
+	nonce, _ := s.Provider.GetNonce(s.Address)
+	gasPrice, _ := s.Provider.Getgasprice()
+	var buf bytes.Buffer
+	paymentMethod := s.Payment.Methods["lockTokenPayment"]
+	var amount *big.Int
+	amount, _ = new(big.Float).Mul(new(big.Float).SetInt(min_amount), big.NewFloat(s.ParamData.PayMultiplyFactor)).Int(amount)
+	buf.Write(paymentMethod.ID)
+	payment := Payment{
+		Id:         cid,
+		MinPayment: min_amount,
+		Amount:     amount,
+		LockTime:   big.NewInt(int64(86400 * s.ParamData.LockTime)),
+		Recipient:  common.HexToAddress(s.ParamData.PaymentRecipientAddress),
+		Size:       big.NewInt(int64(size)),
+		CopyLimit:  5,
+	}
+	fmt.Println(payment)
+	params, err := paymentMethod.Inputs.Pack(payment)
+	if err != nil {
+		return err
+	}
+	buf.Write(params)
+	tx := types.NewTransaction(nonce, common.HexToAddress(s.ParamData.PaymentContractAddress), big.NewInt(0), uint64(500000), gasPrice, buf.Bytes())
+	signed, err := types.SignTx(tx, types.NewEIP155Signer(big.NewInt(80001)), s.PrivateKey)
+	if err != nil {
+		return nil
+	}
+	fmt.Println(signed.Hash().Hex())
+	return s.Provider.SendTx(signed)
 }

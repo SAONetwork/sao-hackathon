@@ -1,4 +1,4 @@
-package abi
+package go_mcs_sdk
 
 const ERC20_ABI string = `
 [
