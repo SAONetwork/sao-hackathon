@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
@@ -217,7 +216,6 @@ func (s McsClient) getAverageAmount(walletAddress string, fileSize int64, durati
 
 	billingPrice = billingJsonResp.Data
 
-	fmt.Printf("fileSizeInGB: %v, storageCostPerUnit: %v, duration: %d, billingPrice: %v", fileSizeInGB, storageCostPerUnit, duration, billingPrice)
 	price := decimal.NewFromFloat(fileSizeInGB * storageCostPerUnit * float64(duration*5*billingPrice) / 365)
 	numberPrice := price.Truncate(9)
 	if numberPrice.Cmp(decimal.Zero) > 0 {
@@ -235,7 +233,6 @@ func (s McsClient) MakePayment(wCid string, size int64, duration int) (string, e
 	payAmount, _ := new(big.Float).SetString(amount)
 	var minPayment *big.Int
 	minPayment, _ = new(big.Float).Mul(payAmount, big.NewFloat(1000000000000000000.0)).Int(minPayment)
-	fmt.Println(minPayment, amount)
 	allowance := s.queryAllowance()
 	if allowance.Cmp(minPayment) <= 0 {
 		s.approve(new(big.Int).Mul(minPayment, big.NewInt(10)))
