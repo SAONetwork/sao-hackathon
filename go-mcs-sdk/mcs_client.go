@@ -36,8 +36,9 @@ type UploadData struct {
 }
 
 type StatsResp struct {
-	Data   StatsData `json:"data"`
-	Status string    `json:"status"`
+	Data    StatsData `json:"data"`
+	Status  string    `json:"status"`
+	Message string    `json:"message"`
 }
 type StatsData struct {
 	AverageCostPushMessage           string `json:"average_cost_push_message"`
@@ -49,15 +50,17 @@ type StatsData struct {
 }
 
 type BillingResp struct {
-	Status string `json:"status"`
-	Code   string `json:"code"`
-	Data   int    `json:"data"`
+	Status  string `json:"status"`
+	Code    string `json:"code"`
+	Data    int    `json:"data"`
+	Message string `json:"message"`
 }
 
 type ParamResp struct {
-	Status string    `json:"status"`
-	Code   int       `json:"code"`
-	Data   ParamData `json:"data"`
+	Status  string    `json:"status"`
+	Code    int       `json:"code"`
+	Data    ParamData `json:"data"`
+	Message string    `json:"message"`
 }
 type ParamData struct {
 	GasLimit                int     `json:"GAS_LIMIT"`
@@ -164,7 +167,12 @@ func (s McsClient) getParams() (*ParamData, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &jsonResp.Data, nil
+
+	if jsonResp.Status == "success" {
+		return &jsonResp.Data, nil
+	} else {
+		return nil, xerrors.New(jsonResp.Message)
+	}
 }
 
 func (s McsClient) getAverageAmount(walletAddress string, fileSize int64, duration int) (string, error) {
@@ -184,6 +192,9 @@ func (s McsClient) getAverageAmount(walletAddress string, fileSize int64, durati
 	jsonResp := StatsResp{}
 	if err = json.Unmarshal(resBody, &jsonResp); err != nil {
 		return "", err
+	}
+	if jsonResp.Status != "success" {
+		return "", xerrors.New(jsonResp.Message)
 	}
 
 	var cost []string
@@ -212,6 +223,9 @@ func (s McsClient) getAverageAmount(walletAddress string, fileSize int64, durati
 	billingJsonResp := BillingResp{}
 	if err = json.Unmarshal(resBody, &billingJsonResp); err != nil {
 		return "", err
+	}
+	if jsonResp.Status != "success" {
+		return "", xerrors.New(jsonResp.Message)
 	}
 
 	billingPrice = billingJsonResp.Data

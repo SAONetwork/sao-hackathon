@@ -38,7 +38,7 @@ var formatContentTypeMaps = map[string]string{
 	"CSV": "text/csv",
 	"JPG": "image/jpeg",
 	"SVG": "image/svg+xml",
-	"MP3": "audio/mp3",
+	"MP3": "audio/mpeg",
 	"MP4": "video/mp4",
 }
 
@@ -300,7 +300,7 @@ func (s *Server) processFileSplitAndEncryption(filePreview *model.FilePreview) {
 
 	log.Infof("uploading to ipfs/filecoin...")
 	duration := int64(-1)
-	dsFile, err := s.StoreService.StoreFile(ctx, storeFile, filePreview.ContentType, encryptFileStat.Size(), file.Name(), duration, filePreview.EthAddr)
+	dsFile, err := s.StoreService.StoreFile(ctx, storeFile, filePreview.ContentType, encryptFileStat.Size(), file.Name(), duration, filePreview.EthAddr, filePreview.Filename)
 	if err != nil {
 		log.Error(err)
 		return
@@ -343,7 +343,7 @@ func (s *Server) processFreeFile(ctx context.Context, filePreview *model.FilePre
 
 	log.Infof("uploading to ipfs/filecoin...")
 	duration := int64(-1)
-	dsFile, err := s.StoreService.StoreFile(ctx, file, filePreview.ContentType, fileSize, filePreview.Filename, duration, filePreview.EthAddr)
+	dsFile, err := s.StoreService.StoreFile(ctx, file, filePreview.ContentType, fileSize, file.Name(), duration, filePreview.EthAddr, filePreview.Filename)
 	if err != nil {
 		log.Error(err)
 		return

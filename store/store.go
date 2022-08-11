@@ -104,15 +104,7 @@ func NewStoreService(config *common.Config, m *model.Model, host host.Host, repo
 	}, nil
 }
 
-func (a StoreService) StoreFile(
-	ctx context.Context,
-	reader io.Reader,
-	contentType string,
-	size int64,
-	dest string,
-	duration int64,
-	walletAddr string,
-) (*model.FileInfo, error) {
+func (a StoreService) StoreFile(ctx context.Context, reader io.Reader, contentType string, size int64, dest string, duration int64, walletAddr string, filename string) (*model.FileInfo, error) {
 	count, err := a.m.CountFileByFilenameAndStatus(dest, 0)
 	if err != nil {
 		return nil, err
@@ -123,7 +115,7 @@ func (a StoreService) StoreFile(
 
 	storeInfo := map[string]string{
 		"address":  walletAddr,
-		"filename": dest,
+		"filename": filename,
 	}
 	ret, err := a.store.StoreFile(ctx, reader, storeInfo)
 	if err != nil {
