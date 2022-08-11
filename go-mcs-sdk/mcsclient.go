@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
@@ -231,21 +230,21 @@ func (s McsClient) MakePayment(wCid string, size int, duration int) (string, err
 	if err != nil {
 		return "", err
 	}
-
-	tx, err := s.lockToken(wCid, amount, size)
+	payAmount, _ := new(big.Float).SetString(amount)
+	var minPayment *big.Int
+	minPayment, _ = new(big.Float).Mul(payAmount, big.NewFloat(1000000000000000000.0)).Int(minPayment)
+	allowance := s.queryAllowance()
+	if allowance.Cmp(minPayment) <= 0 {
+		s.approve(new(big.Int).Mul(minPayment, big.NewInt(10)))
+	}
+	tx, err := s.lockToken(wCid, minPayment, size)
 	if err != nil {
 		return "", err
 	}
-
-	return tx, nil
-}
-
-func (s McsClient) lockToken(wCid string, amount string, size int) (string, error) {
-	return "", nil
+	return tx.Hex(), nil
 }
 
 func (s *McsClient) queryAllowance() *big.Int {
-	fmt.Println(s.Address)
 	result, err := s.Provider.Call(common.HexToAddress(s.ParamData.UsdcAddress), s.USDC.Methods["allowance"], []interface{}{s.Address, common.HexToAddress(s.ParamData.PaymentContractAddress)}, nil)
 	if err != nil {
 		return nil
@@ -263,35 +262,42 @@ type Payment struct {
 	CopyLimit  uint8
 }
 
-func (s *McsClient) approve(amount *big.Int) error {
+func (s *McsClient) CallContrat(to common.Address, method abi.Method, params []interface{}) (*common.Hash, error) {
 	nonce, _ := s.Provider.GetNonce(s.Address)
 	gasPrice, _ := s.Provider.Getgasprice()
 	var buf bytes.Buffer
-	approveMethod := s.USDC.Methods["approve"]
-	buf.Write(approveMethod.ID)
-	params, err := approveMethod.Inputs.Pack(common.HexToAddress(s.ParamData.PaymentContractAddress), amount)
+	buf.Write(method.ID)
+	payload, err := method.Inputs.Pack(params...)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	buf.Write(params)
-	tx := types.NewTransaction(nonce, common.HexToAddress(s.ParamData.UsdcAddress), big.NewInt(0), uint64(50000), gasPrice, buf.Bytes())
+	buf.Write(payload)
+	/*
+		gasLimit, err := s.Provider.EstamateGas(s.Address, to, payload)
+		if err != nil {
+			return nil, err
+		}*/
+	gasLimit := uint64(500000)
+	tx := types.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, buf.Bytes())
 	signed, err := types.SignTx(tx, types.NewEIP155Signer(big.NewInt(80001)), s.PrivateKey)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	fmt.Println(signed.Hash().Hex())
-	return s.Provider.SendTx(signed)
+	txhash := signed.Hash()
+	return &txhash, s.Provider.SendTx(signed)
 }
 
-func (s *McsClient) LockToken(cid string, min_amount *big.Int, size int) error {
+func (s *McsClient) approve(amount *big.Int) (*common.Hash, error) {
+	approveMethod := s.USDC.Methods["approve"]
+	params := []interface{}{common.HexToAddress(s.ParamData.PaymentContractAddress), amount}
+	return s.CallContrat(common.HexToAddress(s.ParamData.UsdcAddress), approveMethod, params)
+}
 
-	nonce, _ := s.Provider.GetNonce(s.Address)
-	gasPrice, _ := s.Provider.Getgasprice()
-	var buf bytes.Buffer
+func (s *McsClient) lockToken(cid string, min_amount *big.Int, size int) (*common.Hash, error) {
+
 	paymentMethod := s.Payment.Methods["lockTokenPayment"]
 	var amount *big.Int
 	amount, _ = new(big.Float).Mul(new(big.Float).SetInt(min_amount), big.NewFloat(s.ParamData.PayMultiplyFactor)).Int(amount)
-	buf.Write(paymentMethod.ID)
 	payment := Payment{
 		Id:         cid,
 		MinPayment: min_amount,
@@ -301,17 +307,5 @@ func (s *McsClient) LockToken(cid string, min_amount *big.Int, size int) error {
 		Size:       big.NewInt(int64(size)),
 		CopyLimit:  5,
 	}
-	fmt.Println(payment)
-	params, err := paymentMethod.Inputs.Pack(payment)
-	if err != nil {
-		return err
-	}
-	buf.Write(params)
-	tx := types.NewTransaction(nonce, common.HexToAddress(s.ParamData.PaymentContractAddress), big.NewInt(0), uint64(500000), gasPrice, buf.Bytes())
-	signed, err := types.SignTx(tx, types.NewEIP155Signer(big.NewInt(80001)), s.PrivateKey)
-	if err != nil {
-		return nil
-	}
-	fmt.Println(signed.Hash().Hex())
-	return s.Provider.SendTx(signed)
+	return s.CallContrat(common.HexToAddress(s.ParamData.PaymentContractAddress), paymentMethod, []interface{}{payment})
 }

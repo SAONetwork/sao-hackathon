@@ -119,6 +119,16 @@ func (p *Provider) GetNonce(address common.Address) (uint64, error) {
 	return p.client.PendingNonceAt(ctx, address)
 }
 
+func (p *Provider) EstamateGas(from, to common.Address, data []byte) (uint64, error) {
+	ctx := context.Background()
+	msg := ethereum.CallMsg{
+		From: from,
+		To:   &to,
+		Data: data,
+	}
+	return p.client.EstimateGas(ctx, msg)
+}
+
 func (p *Provider) Getgasprice() (*big.Int, error) {
 	ctx := context.Background()
 	return p.client.SuggestGasPrice(ctx)
