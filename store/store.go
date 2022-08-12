@@ -66,6 +66,7 @@ type PagedFileInfoInMarket struct {
 
 type StoreService struct {
 	store     Store
+	storeMap  map[string]Store
 	m         *model.Model
 	host      host.Host
 	config    *common.Config
@@ -80,11 +81,10 @@ type StoreRet struct {
 
 func NewStoreService(config *common.Config, m *model.Model, host host.Host, repodir string) (StoreService, error) {
 	var store Store
+	storeMap := make(map[string]Store)
 
-	if config.Mcs.Enabled {
-		store = NewMcsStore(config.Mcs)
-	} else {
-		// ipfs
+	// ipfs
+	if config.Ipfs.Ip != "" {
 		ipfsUrl := fmt.Sprintf("%s:%d", config.Ipfs.Ip, config.Ipfs.Port)
 		if config.Ipfs.ProjectId != "" {
 			// infura
@@ -92,10 +92,16 @@ func NewStoreService(config *common.Config, m *model.Model, host host.Host, repo
 		} else {
 			// local
 			store = NewIpfsStore(ipfsUrl)
+			storeMap["ipfs"] = store
 		}
+	}
+	if config.Mcs.Enabled {
+		store = NewMcsStore(config.Mcs)
+		storeMap["mcs"] = store
 	}
 	return StoreService{
 		store:     store,
+		storeMap: storeMap,
 		m:         m,
 		host:      host,
 		config:    config,
@@ -214,6 +220,8 @@ func (a StoreService) GetFile(ctx context.Context, previewId uint, ethAddr strin
 
 	file := a.m.GetFileInfoByPreviewId(previewId)
 	ipfsHash := file.IpfsHash
+
+	var storeService Store
 	if ipfsHash == "" {
 		if file.McsInfoId <= 0 {
 			return file, nil, errors.New("missing ipfs hash")
@@ -223,13 +231,16 @@ func (a StoreService) GetFile(ctx context.Context, previewId uint, ethAddr strin
 				return file, nil, errors.New("missing ipfs hash")
 			}
 			ipfsHash = mcsInfo.IpfsUrl
+			storeService = a.storeMap["mcs"]
 		}
+	} else {
+		storeService = a.storeMap["ipfs"]
 	}
 
 	filePath := filepath.Join(node.StageProcPath(a.repodir), filepath.Base(file.Filename))
 	var originalFile *os.File
 	if _, err = os.Stat(filePath + ORIGINAL_SUFFIX); errors.Is(err, os.ErrNotExist) {
-		read, err := a.store.GetFile(ctx, map[string]string{
+		read, err := storeService.GetFile(ctx, map[string]string{
 			"hash": ipfsHash,
 		})
 		if err != nil {

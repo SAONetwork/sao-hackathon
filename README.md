@@ -14,7 +14,7 @@ The required prerequisites that need to be set up before the workshop
 
 - Install [Go](https://golang.org/doc/install)
     - Minimum version: 1.17
-- IPFS node
+- IPFS node, or a wallet account with enough matic and USDC in Mumbai Testnet to use [MCS](https://docs.filswan.com/multi-chain-storage/overview)
 - Mysql
 - Ethereum client provider
 
@@ -43,6 +43,14 @@ config.toml format:
 ip = "localhost"
 port = 5001
 
+[mcs]
+enabled = true
+mcsEndpoint = "https://mcs-api.filswan.com/api/v1"
+storageEndpoint = "https://api.filswan.com"
+enableFilecoin = false
+providerRpc = "https://rpc-mumbai.maticvigil.com"
+privateKey = ""
+
 [mysql]
 user = ""
 password = ""
@@ -65,12 +73,23 @@ directPeers = ["/ip4/127.0.0.1/tcp/[port_number]/p2p/[peer_id]"]
 ###### ipfs
 ipfs section defines the ipfs node used to upload and download files
 
+###### mcs
+mcs section defines the basic information to use FilSwan multi-chain storage
+- **enabled:** set true to use MCS to store files, false to use ipfs node defined in ipfs section
+- **mcsEndpoint:** the mcs end point
+- **storageEndpoint:**  the mcs storage end point
+- **enableFilecoin:**  set true to store files in filecoin, it charges matic and USDC so your must prepare enough fund to pay
+- **providerRpc:**  Mumbai testnet RPC URL
+
 ###### mysql
 mysql section defines mysql info
 
 ###### apiServer
-apiServer section is used to provide api service.ip, port, contextPath used to construct api server, exposedPath is used to interact with procnode, for example, procnode use the exposedPath to transfer the original file section and encrypted file section.
-previewsPath specify the folder to store the preview of uploaded files. host is the internet address of our service
+apiServer section is used to provide api service.ip, 
+- **port, contextPath:** defined to construct api server 
+- **exposedPath:** to interact with procnode, for example procnode use the exposedPath to transfer the original file section and encrypted file section
+- **previewsPath:** specify the folder to store the preview of uploaded files 
+- **host:** the internet address of our service
 
 ###### libp2p
 directPeers is defined in this section, the peer id and address can be found in logs when you start your procnode service
