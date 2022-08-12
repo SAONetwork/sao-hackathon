@@ -18,7 +18,7 @@ The required prerequisites that need to be set up before the workshop
 
 - Install [Go](https://golang.org/doc/install)
     - Minimum version: 1.17
-- IPFS node, or a wallet account with enough matic and USDC in Mumbai Testnet to use [MCS](https://docs.filswan.com/multi-chain-storage/overview)
+- IPFS node, or a wallet account with enough MATIC and USDC balance in Mumbai Testnet to use [MCS](https://docs.filswan.com/multi-chain-storage/overview)
 - Mysql
 - Ethereum client provider
 
@@ -82,7 +82,7 @@ mcs section defines the basic information to use FilSwan multi-chain storage
 - **enabled:** set true to use MCS to store files, false to use ipfs node defined in ipfs section
 - **mcsEndpoint:** the mcs end point
 - **storageEndpoint:**  the mcs storage end point
-- **enableFilecoin:**  set true to store files in filecoin, it charges matic and USDC so your must prepare enough fund to pay
+- **enableFilecoin:**  set true to store files in filecoin, it charges MATIC and USDC so your must prepare enough fund to pay
 - **providerRpc:**  Mumbai testnet RPC URL
 
 ###### mysql

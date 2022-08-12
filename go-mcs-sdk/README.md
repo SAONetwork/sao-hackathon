@@ -49,7 +49,20 @@ go get https://github.com/SaoNetowrk/go-mcs-sdk
 Example of uploading a single file using the MCS SDK.
 
 ```golang
-
+mcsClient := NewMcsClient("https://rpc-mumbai.maticvigil.com", "https://mcs-api.filswan.com/api/v1", "https://api.filswan.com")
+err := s.SetAccount("<PRIVATE_KEY>")
+file, _ := os.Open("/my/file/path")
+jsonResp, err := mcsClient.Upload("filename", file, map[string]string{
+"duration": 525,
+"fileType": 0,
+})
+if err != nil {
+//handler error
+}
+tx, err := mcsClient.MakePayment(jsonResp.Data.WCid, jsonResp.Data.FileSize, 525)
+if err != nil {
+//handler error
+}
 ```
 
 # Contributing
