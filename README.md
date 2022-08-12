@@ -1,4 +1,8 @@
 # Storverse
+
+[![Made by SaoNetwork](https://img.shields.io/badge/made%20by-SaoNetwork-green.svg)](https://sao.network/)
+[![Chat on discord](https://img.shields.io/badge/join%20-discord-brightgreen.svg)](https://discord.com/invite/q58XsnQqQF)
+
 In Storverse project, we have three parts of service to accomplish the work
 - server 
   - the main server for the demonstration website, which provide api service for end users and interact with procnode

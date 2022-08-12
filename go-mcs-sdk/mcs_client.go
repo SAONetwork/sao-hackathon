@@ -103,6 +103,7 @@ func (s *McsClient) SetAccount(privateKey string) (err error) {
 	if err != nil {
 		return err
 	}
+
 	s.Address = crypto.PubkeyToAddress(s.PrivateKey.PublicKey)
 	return nil
 }
