@@ -1,20 +1,33 @@
-# Storverse
+# Storverse Hackathon
 
 [![Made by SaoNetwork](https://img.shields.io/badge/made%20by-SaoNetwork-green.svg)](https://sao.network/)
 [![Chat on discord](https://img.shields.io/badge/join%20-discord-brightgreen.svg)](https://discord.com/invite/q58XsnQqQF)
 
+# Introduction
+
+SAO Network is to provide a decentralized storage network that is composed by worldwide sao nodes which offers moduralized and extensible services on top of IPFS/Filecoin. Services includes:
+* data cache service
+* private data storage
+* copyright management
+* verifiable claim
+* etc
+
+Storverse Hackathon implements a simple sao nodes with private data storage support and a file market demo application to demonstrate how users can upload and purchase file use rights. 
+
+In this hackathon project, we choose to use Filswan MCS storage solution to store files on IPFS/Filecoin, because Filswan MCS provides a complete and convenient solution for end users and application to pay and store on IPFS/Filecoin. Thanks to Filswan's great project.
+Since there is no go MCS SDK, we are developing [go-mcs-sdk](https://github.com/SaoNetwork/sao-hackathon/tree/main/go-mcs-sdk) by ourselves, we will open source and contribute it to community once it's complete.
+
+# Getting Started
 In Storverse project, we have three parts of service to accomplish the work
-- server 
+- server
   - the main server for the demonstration website, which provide api service for end users and interact with procnode
 - monitor
   - the project to listen the contract event in ethereum
 - procnode
   - the node which provide data processing ability, like data encryption and decryption, as well as all possible data processing way like version tracking, provenance... to be expanded
 
-# Getting Started
-
 ### Prerequisites
-The required prerequisites that need to be set up before the workshop
+The required prerequisites that need to be set up before the workshop.
 
 - Install [Go](https://golang.org/doc/install)
     - Minimum version: 1.17
@@ -175,3 +188,71 @@ monitor
 ```shell
 ./sao-monitor [--repo=my/proc/path] run
 ```
+
+# Tech Design
+
+### Encryption/Decryption Mechanism
+Unlike encryption and decryption in client side, we are designing a mechanism to do it in server side. This may be more practical in some cases:
+* user may not directly own the file.
+* user may not have suitable machine to process big files.
+
+Requirement
+* Any single SAO node never has complete file or have any way to recover complete file from other nodes.
+* File split detail is unpredictable.
+* Original file can be reassembled back.
+
+We are designing draft protocol - /sao/file/encrypt/0.0.1  
+Client Node and Proc Node are connected by p2p.  
+Encryption Flow:
+1. Client Node splits file into chunks, each trunk size is random and around 16M.
+2. Client Node sends file encryption request to a random Proc Node by Beacon.
+3. Proc Node Retrieves file chunk from request's Transfer.
+4. Proc Node generates random file key and encrypt.
+5. Proc Node encrypts encrypted chunk info and file key and store in decentralized storage.
+6. Proc Node shares file chunk info and file key with file owner.
+7. Proc Node respond Client Node with encrypted file info. 
+8. Client Node receives all encrypted file chunk, reassemble and store on IPFS/Filecoin.
+
+Decryption Flow:
+1. Client Node retrieves encrypted complete file from IPFS/Filecoin.
+1. Client Node broadcasts file id
+2. Proc Node who has chunk info of this file replies with chunk info.
+3. Client Node split out file range according to encrypted chunk info.
+4. Client Node sends chunk decryption request to Proc Node.
+5. Proc Node receives the chunk from request's Transfer and decrypts encrypted chunk using file key.
+6. Proc Node responds Client Node with decrypted chunk info.
+6. Client Node receives decrypted chunk and reassemble the original file.
+
+This video also explains the flow - [Encrypt/Decrypt Flow](https://www.youtube.com)
+
+```golang
+// /sao/file/encrypt/0.0.1
+type FileEncryptReq struct {
+  FileId string
+  ClientId string
+  Offset uint64
+  Size uint64
+  Transfer types.Transfer
+}
+type FileEncryptResp struct {
+  FileKey  string
+  Transfer types.Transfer
+  Accepted bool
+}
+type FileDecryptReq struct {
+  FileId string
+  ClientId string
+  Offset uint64
+  Size uint64
+  Transfer types.Transfer
+}
+type FileDecryptResp struct {
+  FileId   string
+  Offset   uint64
+  Size     uint64
+  Transfer types.Transfer
+  Accepted bool
+}
+```
+
+The protocol will soon iterate into newer version with more security and efficiency consideration.

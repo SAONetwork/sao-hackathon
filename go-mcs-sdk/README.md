@@ -15,7 +15,7 @@
 
 # Introduction
 
-A golang software development kit for the Multi-Chain Storage (MCS) https://mcs.filswan.com service. It provides a convenient interface for working with the MCS API from a web browser or Node.js. This SDK has the following functionalities:
+A golang software development kit for the Multi-Chain Storage (MCS) https://mcs.filswan.com service. This SDK has the following functionalities:
 
 - **POST**    upload file to Filswan IPFS gate way
 - **POST**    make payment to swan filecoin storage gate way
@@ -41,27 +41,31 @@ For more information about the API usage, check out the [MCS API documentation](
 Instructions for developers working with MCS SDK and API.
 
 ## Installation
-```
-go get https://github.com/SaoNetowrk/go-mcs-sdk
-```
+(We will extract this as a seprate public go library later.)
 
 ## Getting Started
 Example of uploading a single file using the MCS SDK.
 
 ```golang
-mcsClient := NewMcsClient("https://rpc-mumbai.maticvigil.com", "https://mcs-api.filswan.com/api/v1", "https://api.filswan.com")
+mcsClient := NewMcsClient(
+	"https://rpc-mumbai.maticvigil.com", 
+	"https://mcs-api.filswan.com/api/v1", 
+	"https://api.filswan.com"
+)
 err := s.SetAccount("<PRIVATE_KEY>")
+
 file, _ := os.Open("/my/file/path")
 jsonResp, err := mcsClient.Upload("filename", file, map[string]string{
-"duration": 525,
-"fileType": 0,
+    "duration": 525,
+    "fileType": 0,
 })
 if err != nil {
-//handler error
+    //handler error
 }
+
 tx, err := mcsClient.MakePayment(jsonResp.Data.WCid, jsonResp.Data.FileSize, 525)
 if err != nil {
-//handler error
+    //handler error
 }
 ```
 
