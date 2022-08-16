@@ -117,14 +117,12 @@ func (m *Monitor) Run() {
 				log.Error(err)
 				continue
 			}
-			purchaseOrder := model.PurchaseOrder{
-				Id:        uint(orderId.Int64()),
-				FileId:    int64(filePreview.Id),
-				BuyerAddr: buyer.Hex(),
-				//OrderTxHash: orderId,
-				State: model.ContractOrdered,
-			}
-			if err = m.Model.CreatePurchaseOrder(&purchaseOrder); err != nil {
+			purchaseOrder := make(map[string]interface{})
+			purchaseOrder["id"] = uint(orderId.Int64())
+			purchaseOrder["file_id"] = int64(filePreview.Id)
+			purchaseOrder["buyer_addr"] = buyer.Hex()
+			purchaseOrder["state"] = model.ContractOrdered
+			if err = m.Model.CreatePurchaseOrder(purchaseOrder); err != nil {
 				log.Error(err)
 			}
 			fmt.Println(tokenId, buyer, orderId, price, timestamp)

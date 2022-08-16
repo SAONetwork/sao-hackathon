@@ -3,7 +3,7 @@ package model
 import "time"
 
 type PurchaseOrder struct {
-	Id             uint
+	Id             uint	`gorm:"autoIncrement:false"`
 	FileId         int64
 	BuyerAddr      string
 	OrderTxHash    string
@@ -40,8 +40,8 @@ func (model *Model) GetNextPurchaseOrderToFinish() (*PurchaseOrder, bool) {
 	}
 }
 
-func (model *Model) CreatePurchaseOrder(purchaseOrder *PurchaseOrder) error {
-	return model.DB.Create(purchaseOrder).Error
+func (model *Model) CreatePurchaseOrder(purchaseOrder map[string]interface{}) error {
+	return model.DB.Model(&PurchaseOrder{}).Create(purchaseOrder).Error
 }
 
 func (model *Model) UpdatePurchaseOrderState(orderId uint, state OrderState) error {
