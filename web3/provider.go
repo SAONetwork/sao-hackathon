@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"math/big"
+	"os"
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -57,6 +58,7 @@ func (p *Provider) ListenEvent(addresses []common.Address, event_chan chan types
 			return
 		case err := <-sub.Err():
 			log.Println(err, p.URL)
+			os.Exit(0)
 			break
 		case log := <-channel:
 			event_chan <- log
