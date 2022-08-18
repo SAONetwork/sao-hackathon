@@ -122,6 +122,7 @@ func (m *Monitor) Run() {
 			purchaseOrder["file_id"] = int64(filePreview.Id)
 			purchaseOrder["buyer_addr"] = buyer.Hex()
 			purchaseOrder["state"] = model.ContractOrdered
+			purchaseOrder["updated_at"] = time.Now()
 			if err = m.Model.CreatePurchaseOrder(purchaseOrder); err != nil {
 				log.Error(err)
 			}
