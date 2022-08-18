@@ -222,17 +222,13 @@ func (a StoreService) GetFile(ctx context.Context, previewId uint, ethAddr strin
 	ipfsHash := file.IpfsHash
 
 	var storeService Store
-	if ipfsHash == "" {
-		if file.McsInfoId <= 0 {
+	if file.McsInfoId > 0 {
+		mcsInfo, err := a.m.GetMcsInfoById(file.McsInfoId)
+		if err != nil {
 			return file, nil, errors.New("missing ipfs hash")
-		} else {
-			mcsInfo, err := a.m.GetMcsInfoById(file.McsInfoId)
-			if err != nil {
-				return file, nil, errors.New("missing ipfs hash")
-			}
-			ipfsHash = mcsInfo.IpfsUrl
-			storeService = a.storeMap["mcs"]
 		}
+		ipfsHash = mcsInfo.IpfsUrl
+		storeService = a.storeMap["mcs"]
 	} else {
 		storeService = a.storeMap["ipfs"]
 	}

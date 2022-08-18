@@ -51,6 +51,7 @@ func (s McsStore) StoreFile(ctx context.Context, reader io.Reader, info map[stri
 		mcsInfo.PaymentTxHash = tx
 	}
 	return StoreRet{
+		IpfsHash: mcsInfo.PayloadCid,
 		McsInfo: &mcsInfo,
 	}, nil
 }
