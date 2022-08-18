@@ -89,7 +89,7 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 	paid := false
 	if filePreview.Price.Cmp(decimal.NewFromInt(0))> 0 && filePreview.EthAddr != ethAddress {
 		purchaseOrder := model.GetPurchaseOrder(fileId, ethAddress)
-		if purchaseOrder.Id > 0 {
+		if purchaseOrder.FileId > 0 {
 			paid = true
 		}
 	}
@@ -152,7 +152,7 @@ func (model *Model) GetMarketFiles(limit int, offset int, ethAddress string, con
 		paid := false
 		if filePreview.Price.Cmp(decimal.NewFromInt(0))> 0 && ethAddress != "" {
 			order := model.GetPurchaseOrder(filePreview.Id, ethAddress)
-			if order.Id > 0 {
+			if order.FileId > 0 {
 				paid = true
 			}
 		}

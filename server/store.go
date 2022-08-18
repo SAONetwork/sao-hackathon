@@ -424,7 +424,7 @@ func (s *Server) checkFileStatus(fileId uint, ethAddress string) error {
 	}
 	if filePreview.Price.Cmp(decimal.NewFromInt(0)) > 0 && filePreview.EthAddr != ethAddress {
 		purchaseOrder := s.Model.GetPurchaseOrder(fileId, ethAddress)
-		if purchaseOrder.Id == 0 {
+		if purchaseOrder.FileId == 0 {
 			return errors.New("not purchased")
 		}
 		if purchaseOrder.State == model.ContractOrdered {
