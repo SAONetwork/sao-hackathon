@@ -336,6 +336,9 @@ func (a StoreService) decryptFileChunk(ctx context.Context, splitFile fileproces
 		if done {
 			return decryptedChunkPath, err
 		}
+		if err != nil {
+			log.Error(err)
+		}
 	}
 
 	return "", errors.New("missing decrypt file part")
@@ -357,7 +360,7 @@ func (a StoreService) tryDecryptFromPeer(ctx context.Context, splitFile fileproc
 
 	s, err := a.host.NewStream(ctx, addrInfo.ID, proc.FileProcessDecryptionProtocolDraft)
 	if err != nil {
-		return "", xerrors.Errorf("failed to open stream to peer %s: %w", addrInfo.ID, err), true
+		return "", xerrors.Errorf("failed to open stream to peer %s: %w", addrInfo.ID, err), false
 	}
 	defer s.Close()
 
@@ -371,13 +374,13 @@ func (a StoreService) tryDecryptFromPeer(ctx context.Context, splitFile fileproc
 
 	var resp proc.FileDecryptResp
 	if err = util.DoRpc(ctx, s, &req, &resp, "json"); err != nil {
-		return "", xerrors.Errorf("send proposal rpc: %w", err), true
+		return "", xerrors.Errorf("send proposal rpc: %w", err), false
 	}
 
 	if resp.Accepted {
 		err = fileprocess.TransferFile(ctx, a.transport, resp.Transfer, req.FileId, outFilePath)
 		if err != nil {
-			return "", xerrors.Errorf("transfer file error: %w", err), true
+			return "", xerrors.Errorf("transfer file error: %w", err), false
 		}
 		return outFilePath, nil, true
 	}
