@@ -84,7 +84,7 @@ func (m *Monitor) Run() {
 
 	s.Every(1).Seconds().Do(func() {
 		newLatest := m.provider.GetLatestBlock()
-		log.Printf("latest : %d newLatest : %d", latest, newLatest)
+		fmt.Printf("latest : %d newLatest : %d", latest, newLatest)
 		flogs := m.provider.FilterLogs(context.Background(), addresses, new(big.Int).SetUint64(latest), new(big.Int).SetUint64(newLatest))
 		latest = newLatest
 		for _, log := range flogs {
