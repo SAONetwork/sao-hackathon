@@ -20,7 +20,7 @@ GOCC?=go
 
 sao-ds: $(BUILD_DEPS)
 	rm -rf sao-ds
-	$(GOCC) build -ldflags="-extldflags=-Wl,--allow-multiple-definition" -o sao-ds ./cmd/ds
+	$(GOCC) build -o sao-ds ./cmd/ds
 .PHONY: sao-ds
 BINS+=sao-ds
 

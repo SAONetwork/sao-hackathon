@@ -43,6 +43,10 @@ func (s *Server) ServeAPI(listen string, contextPath string) {
 		hackathon.GET("/user/purchases", s.GetUserPurchases)
 		hackathon.GET("/user/dashboard", s.GetUserDashboard)
 		hackathon.GET("/user/summary", s.GetUserSummary)
+
+		hackathon.GET("/collection", s.GetCollection)
+		hackathon.POST("/collection", s.CreateCollection)
+		hackathon.DELETE("/collection/:collectionId", s.DeleteCollection)
 	}
 
 	noSignature := r.Group(contextPath + "/api/v1")

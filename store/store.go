@@ -95,10 +95,6 @@ func NewStoreService(config *common.Config, m *model.Model, host host.Host, repo
 			storeMap["ipfs"] = store
 		}
 	}
-	storeMap["mcs"] = NewMcsStore(config.Mcs)
-	if config.Mcs.Enabled {
-		store = storeMap["mcs"]
-	}
 	return StoreService{
 		store:     store,
 		storeMap: storeMap,
