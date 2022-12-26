@@ -16,8 +16,8 @@ import (
 )
 
 func (s *Server) CreateCollection(ctx *gin.Context) {
-	ethAddress, _ := ctx.Get("User")
-	if ethAddress.(string) == "" {
+	ethAddress := ctx.GetHeader("address")
+	if ethAddress == "" {
 		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
 		return
 	}
@@ -112,8 +112,157 @@ func (s *Server) GetCollection(ctx *gin.Context) {
 	collection, err := s.Model.GetCollection(uint(collectionId), owner, uint(fileId))
 	if err != nil {
 		log.Error(err)
-		api.ServerError(ctx, "error.get.collection", "database error")
-		return
 	}
 	api.Success(ctx, collection)
+}
+
+func (s *Server) AddFileToCollection(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	var collectionFile model.CollectionRequest
+	decoder := json.NewDecoder(ctx.Request.Body)
+	err := decoder.Decode(&collectionFile)
+	if err != nil {
+		api.BadRequest(ctx, "invalid.param", err.Error())
+		return
+	}
+
+	for _, collectionId := range collectionFile.CollectionIds {
+		err = s.Model.AddFileToCollection(collectionFile.FileId, collectionId, ethAddress.(string))
+		if err != nil {
+			log.Error(err)
+			api.ServerError(ctx, "addFileToCollection.error", err.Error())
+		}
+	}
+	api.Success(ctx, true)
+}
+
+
+func (s *Server) RemoveFileFromCollection(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	collectionIdParam, got := ctx.GetQuery("collectionId")
+	if !got {
+		collectionIdParam = "0"
+	}
+	collectionId, err := strconv.ParseUint(collectionIdParam, 10, 0)
+	if err != nil {
+		collectionId = 0
+	}
+
+	fileIdParam, got := ctx.GetQuery("fileId")
+	if !got {
+		fileIdParam = "0"
+	}
+	fileId, err := strconv.ParseUint(fileIdParam, 10, 0)
+	if err != nil {
+		fileId = 0
+	}
+
+	err = s.Model.RemoveFileFromCollection(ethAddress.(string), uint(fileId), uint(collectionId))
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "removeFileFromCollection.error", err.Error())
+	}
+	api.Success(ctx, true)
+}
+
+func (s *Server) LikeCollection(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	collectionIdParam, got := ctx.GetQuery("collectionId")
+	if !got {
+		collectionIdParam = "0"
+	}
+	collectionId, err := strconv.ParseUint(collectionIdParam, 10, 0)
+	if err != nil {
+		collectionId = 0
+	}
+
+	err = s.Model.LikeCollection(ethAddress.(string), uint(collectionId))
+	if err != nil {
+		log.Error(err)
+	}
+	api.Success(ctx, true)
+}
+
+func (s *Server) UnLikeCollection(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	collectionIdParam, got := ctx.GetQuery("collectionId")
+	if !got {
+		collectionIdParam = "0"
+	}
+	collectionId, err := strconv.ParseUint(collectionIdParam, 10, 0)
+	if err != nil {
+		collectionId = 0
+	}
+
+	err = s.Model.UnlikeCollection(ethAddress.(string), uint(collectionId))
+	if err != nil {
+		log.Error(err)
+	}
+	api.Success(ctx, true)
+}
+
+func (s *Server) StarCollection(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	collectionIdParam, got := ctx.GetQuery("collectionId")
+	if !got {
+		collectionIdParam = "0"
+	}
+	collectionId, err := strconv.ParseUint(collectionIdParam, 10, 0)
+	if err != nil {
+		collectionId = 0
+	}
+
+	err = s.Model.StarCollection(ethAddress.(string), uint(collectionId))
+	if err != nil {
+		log.Error(err)
+	}
+	api.Success(ctx, true)
+}
+
+func (s *Server) DeleteStarCollection(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	collectionIdParam, got := ctx.GetQuery("collectionId")
+	if !got {
+		collectionIdParam = "0"
+	}
+	collectionId, err := strconv.ParseUint(collectionIdParam, 10, 0)
+	if err != nil {
+		collectionId = 0
+	}
+
+	err = s.Model.DeleteStarCollection(ethAddress.(string), uint(collectionId))
+	if err != nil {
+		log.Error(err)
+	}
+	api.Success(ctx, true)
 }

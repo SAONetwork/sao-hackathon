@@ -26,7 +26,7 @@ type Server struct {
 	Repodir      string
 }
 
-func (s *Server) ServeAPI(listen string, contextPath string) {
+func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.HandlerFunc) {
 	r := gin.Default()
 	r.Use(cors.New(s.CorsConfig()))
 
@@ -47,6 +47,12 @@ func (s *Server) ServeAPI(listen string, contextPath string) {
 		hackathon.GET("/collection", s.GetCollection)
 		hackathon.POST("/collection", s.CreateCollection)
 		hackathon.DELETE("/collection/:collectionId", s.DeleteCollection)
+		hackathon.POST("/collectionFile", s.AddFileToCollection)
+		hackathon.DELETE("/collectionFile", s.RemoveFileFromCollection)
+		hackathon.POST("/collectionLike", s.LikeCollection)
+		hackathon.DELETE("/collectionLike", s.UnLikeCollection)
+		hackathon.POST("/collectionStar", s.StarCollection)
+		hackathon.DELETE("/collectionStar", s.DeleteStarCollection)
 	}
 
 	noSignature := r.Group(contextPath + "/api/v1")
@@ -59,6 +65,9 @@ func (s *Server) ServeAPI(listen string, contextPath string) {
 	r.Static(contextPath + "/previews", s.Config.PreviewsPath)
 	procDir := filepath.Join(s.Repodir, cmd.FsStaging, "proc")
 	r.Static(contextPath + "/api/v1/proc/file", procDir)
+
+	// swagger
+	r.GET(contextPath+ "/swagger/*any", swagHandler)
 
 	r.Run(listen)
 }

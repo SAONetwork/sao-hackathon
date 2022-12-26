@@ -7,6 +7,8 @@ import (
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/urfave/cli/v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -14,6 +16,7 @@ import (
 	"os"
 	"sao-datastore-storage/build"
 	"sao-datastore-storage/cmd"
+	"sao-datastore-storage/docs"
 	"sao-datastore-storage/model"
 	"sao-datastore-storage/node"
 	saoserver "sao-datastore-storage/server"
@@ -117,6 +120,15 @@ var initCmd = &cli.Command{
 		if err = db.AutoMigrate(&model.Collection{}); err != nil {
 			return err
 		}
+		if err = db.AutoMigrate(&model.CollectionFile{}); err != nil {
+			return err
+		}
+		if err = db.AutoMigrate(&model.CollectionLike{}); err != nil {
+			return err
+		}
+		if err = db.AutoMigrate(&model.CollectionStar{}); err != nil {
+			return err
+		}
 
 		log.Info("initialize saods succeed.")
 
@@ -177,8 +189,12 @@ var runCmd = &cli.Command{
 		}
 		listen := fmt.Sprintf("%s:%d", config.ApiServer.Ip, config.ApiServer.Port)
 		log.Info("listening ", listen)
+		docs.SwaggerInfo.BasePath = config.ApiServer.ContextPath + "/api/v1"
+		docs.SwaggerInfo.Version = "1.0"
+		docs.SwaggerInfo.Title = "Storverse API Documentation"
+
 		go func() {
-			server.ServeAPI(listen, config.ApiServer.ContextPath)
+			server.ServeAPI(listen, config.ApiServer.ContextPath, ginSwagger.WrapHandler(swaggerFiles.Handler))
 		}()
 
 		finishCh := node.MonitorShutdown(

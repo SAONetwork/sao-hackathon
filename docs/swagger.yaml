@@ -1,0 +1,213 @@
+definitions:
+  main.MockCollection:
+    properties:
+      description:
+        type: string
+      ethAddr:
+        type: string
+      id:
+        type: integer
+      labels:
+        type: string
+      preview:
+        type: string
+      title:
+        type: string
+      type:
+        type: integer
+    type: object
+  main.MockCollectionRequest:
+    properties:
+      collectionIds:
+        items:
+          type: integer
+        type: array
+      fileId:
+        type: integer
+      status:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /collection:
+    delete:
+      description: delete collection
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The collection id for deletion
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      responses: {}
+      tags:
+      - Collection
+    get:
+      description: get collection by address
+      parameters:
+      - description: The collection id for query
+        in: query
+        name: collectionId
+        type: string
+      - description: The file id for query
+        in: query
+        name: fileId
+        type: string
+      - description: The owner for query
+        in: query
+        name: owner
+        type: string
+      responses: {}
+      tags:
+      - Collection
+    post:
+      description: create collection
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: body for request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.MockCollection'
+      responses: {}
+      tags:
+      - Collection
+  /collectionFile:
+    delete:
+      description: remove file from collection
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The collection id for deletion
+        in: query
+        name: collectionId
+        type: string
+      - description: The file id for deletion
+        in: query
+        name: fileId
+        type: string
+      responses: {}
+      tags:
+      - Collection
+    post:
+      description: add file to collection
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: body for request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.MockCollectionRequest'
+      responses: {}
+      tags:
+      - Collection
+  /collectionLike:
+    delete:
+      description: unlike collection
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The collection id for unlike operation
+        in: query
+        name: collectionId
+        type: string
+      responses: {}
+      tags:
+      - Collection
+    post:
+      description: like collection
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The collection id for like operation
+        in: query
+        name: collectionId
+        type: string
+      responses: {}
+      tags:
+      - Collection
+swagger: "2.0"
