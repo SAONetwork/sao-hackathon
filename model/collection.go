@@ -46,7 +46,7 @@ type CollectionRequest struct {
 }
 
 type CollectionVO struct {
-	ID          uint
+	Id          uint
 	Preview     string
 	Labels      string
 	Title       string

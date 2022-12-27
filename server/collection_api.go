@@ -109,14 +109,23 @@ func (s *Server) GetCollection(ctx *gin.Context) {
 
 	owner, _ := ctx.GetQuery("owner")
 
-	collection, err := s.Model.GetCollection(uint(collectionId), owner, uint(fileId))
+	collections, err := s.Model.GetCollection(uint(collectionId), owner, uint(fileId))
 	if err != nil {
 		log.Error(err)
 	}
-	for _, c := range *collection {
-		c.Preview = fmt.Sprintf("%s/%s/%s", s.Config.Host, "previews", c.Preview)
+
+	var result []model.CollectionVO
+	for _, c := range *collections {
+		result = append(result, model.CollectionVO{
+			Id: c.Id,
+			Preview: fmt.Sprintf("%s/%s/%s", s.Config.Host, "previews", c.Preview),
+			Title: c.Title,
+			Labels: c.Labels,
+			Description: c.Description,
+			Type: c.Type,
+		})
 	}
-	api.Success(ctx, collection)
+	api.Success(ctx, result)
 }
 
 func (s *Server) AddFileToCollection(ctx *gin.Context) {
