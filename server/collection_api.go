@@ -30,20 +30,22 @@ func (s *Server) CreateCollection(ctx *gin.Context) {
 		return
 	}
 
-	img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview)))
-	if err != nil {
-		log.Info(err)
-		img, err = jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview)))
+	if !strings.HasPrefix(collection.Preview, s.Config.Host) {
+		img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview)))
 		if err != nil {
-			api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png and jpeg decode failed"))
-			return
+			log.Info(err)
+			img, err = jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview)))
+			if err != nil {
+				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png and jpeg decode failed"))
+				return
+			}
 		}
+		id := uuid.New().String()
+		dc := gg.NewContextForImage(img)
+		preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
+		dc.SavePNG(preview)
+		collection.Preview = fmt.Sprintf("%s.png", id)
 	}
-	id := uuid.New().String()
-	dc := gg.NewContextForImage(img)
-	preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
-	dc.SavePNG(preview)
-	collection.Preview = fmt.Sprintf("%s.png", id)
 
 	err = s.Model.UpsertCollection(&collection)
 	if err != nil {
