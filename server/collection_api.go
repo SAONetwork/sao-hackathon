@@ -113,6 +113,9 @@ func (s *Server) GetCollection(ctx *gin.Context) {
 	if err != nil {
 		log.Error(err)
 	}
+	for _, c := range *collection {
+		c.Preview = fmt.Sprintf("%s/%s/%s", s.Config.Host, "previews", c.Preview)
+	}
 	api.Success(ctx, collection)
 }
 

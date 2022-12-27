@@ -127,6 +127,56 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 	return &filesInfoInMarket, nil
 }
 
+func (model *Model) GetSearchFileResult(key string, ethAddress string) []FileInfoInMarket {
+	var filePreviews []FilePreview
+
+	model.DB.Raw("select *,\n" +
+		"       case when title like '%?%' then 3 else 0 end + \n" +
+		"       case when filename like '%?%' then 2 else 0 end + \n" +
+		"       case when labels like '%?%' then 3 else 0 end + \n" +
+		"       case when `description` like '%?%' then 1 else 0 end as matches \n" +
+		"  from file_previews \n" +
+		" where title like '%?%'\n" +
+		"    or filename like '%?%'\n" +
+		"    or labels like '%?%'\n" +
+		"    or `description` like '%?%'\n" +
+		" order by matches desc", key, key, key, key, key, key, key, key).Scan(&filePreviews)
+
+	filesInfoInMarket := make([]FileInfoInMarket, 0)
+
+	for _, filePreview := range filePreviews {
+		paid := false
+		if filePreview.Price.Cmp(decimal.NewFromInt(0))> 0 && ethAddress != "" {
+			order := model.GetPurchaseOrder(filePreview.Id, ethAddress)
+			if order.FileId > 0 {
+				paid = true
+			}
+		}
+		fileExtension := filepath.Ext(filePreview.Filename)
+		if fileExtension != "" {
+			fileExtension = fileExtension[1:]
+		}
+		filesInfoInMarket = append(filesInfoInMarket, FileInfoInMarket{Id: filePreview.Id,
+			CreatedAt:    filePreview.CreatedAt,
+			UpdatedAt:    filePreview.UpdatedAt,
+			EthAddr:      filePreview.EthAddr,
+			Preview:      fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, filePreview.Preview),
+			Labels:       filePreview.Labels,
+			Price:        filePreview.Price,
+			Title:        filePreview.Title,
+			Description:  filePreview.Description,
+			ContentType:  filePreview.ContentType,
+			Type:         filePreview.Type,
+			Status:       filePreview.Status,
+			NftTokenId:   filePreview.NftTokenId,
+			FileCategory: filePreview.FileCategory,
+			AdditionalInfo: filePreview.AdditionalInfo,
+			FileExtension: fileExtension,
+			AlreadyPaid:  paid})
+	}
+	return filesInfoInMarket
+}
+
 func (model *Model) GetMarketFiles(limit int, offset int, ethAddress string, condition map[string]interface{}, price int) ([]FileInfoInMarket, int64) {
 	var filePreviews []FilePreview
 	if price > 0 {

@@ -3,7 +3,6 @@ package main
 import "github.com/gin-gonic/gin"
 
 type MockCollection struct {
-	Id          uint
 	EthAddr     string
 	Preview     string `gorm:"varchar(255);"`
 	Labels      string

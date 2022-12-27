@@ -53,7 +53,6 @@ type CollectionVO struct {
 	Description string
 	Type        int
 	Liked		bool
-	Star		bool
 }
 
 func (model *Model) CreateCollection(collection *Collection) error {
@@ -71,6 +70,12 @@ func (model *Model) UpsertCollection(collection *Collection) (*Collection, error
 
 func (model *Model) DeleteCollection(collectionId uint) error {
 	return model.DB.Where("id = ?", collectionId).Delete(&Collection{}).Error
+}
+
+func (model *Model) GetSearchCollectionResult(key string) (*[]Collection, error) {
+	var collections []Collection
+	model.DB.Where("title like '%?%' or labels like '%?%' or `description` like '%?%'", key, key, key).Find(&collections)
+	return &collections, nil
 }
 
 func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint) (*[]Collection, error) {
