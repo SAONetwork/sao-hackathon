@@ -5,8 +5,6 @@ definitions:
         type: string
       ethAddr:
         type: string
-      id:
-        type: integer
       labels:
         type: string
       preview:

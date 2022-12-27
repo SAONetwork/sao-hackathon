@@ -289,9 +289,6 @@ const docTemplate = `{
                 "ethAddr": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
                 "labels": {
                     "type": "string"
                 },
