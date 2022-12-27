@@ -4,6 +4,7 @@ import (
 	"errors"
 	"golang.org/x/xerrors"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Collection struct {
@@ -47,6 +48,8 @@ type CollectionRequest struct {
 
 type CollectionVO struct {
 	Id          uint
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	Preview     string
 	Labels      string
 	Title       string

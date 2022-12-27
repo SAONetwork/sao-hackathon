@@ -118,6 +118,8 @@ func (s *Server) GetCollection(ctx *gin.Context) {
 	for _, c := range *collections {
 		result = append(result, model.CollectionVO{
 			Id: c.Id,
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
 			Preview: fmt.Sprintf("%s/%s/%s", s.Config.Host, "previews", c.Preview),
 			Title: c.Title,
 			Labels: c.Labels,
