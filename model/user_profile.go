@@ -14,8 +14,12 @@ type UserProfile struct {
 }
 
 type UserProfileVO struct {
-	Avatar   string
-	Username string
+	Id uint
+	EthAddr  string
+	Avatar           string
+	Username         string
+	TotalUploads     int64
+	TotalCollections int64
 }
 
 type UserSummary struct {
@@ -74,6 +78,28 @@ func (model *Model) GetUserProfile(ethAddr string) (*UserProfile, error) {
 	user.Username = fmt.Sprintf("%s_%s", "Storverse", ethAddr[len(ethAddr)-4:])
 	model.DB.Where(&UserProfile{EthAddr: ethAddr}).FirstOrCreate(&user)
 	return &user, nil
+}
+
+func (model *Model) GetSearchUserResult(key string) (*[]UserProfileVO, error) {
+	var users []UserProfile
+	var result []UserProfileVO
+	model.DB.Model(&UserProfile{}).Where("username like ? or eth_addr = ?", "%"+key+"%", key).Find(&users)
+	for _,user := range users {
+		var uploads int64
+		model.DB.Model(&FilePreview{}).Where(&FilePreview{EthAddr: user.EthAddr}).Where("status = 1 or (status = 2 and price = 0) or (status = 2 and price > 0 and nft_token_id > 0)").Count(&uploads)
+
+		var totalCollections int64
+		model.DB.Model(&Collection{}).Where(&Collection{EthAddr: user.EthAddr}).Count(&totalCollections)
+		result = append(result, UserProfileVO{
+			Id: user.Id,
+			EthAddr: user.EthAddr,
+			Username: user.Username,
+			Avatar: user.Avatar,
+			TotalUploads: uploads,
+			TotalCollections: totalCollections,
+		})
+	}
+	return &result, nil
 }
 
 func (model *Model) GetUserSummary(ethAddr string) (*UserSummary, error) {

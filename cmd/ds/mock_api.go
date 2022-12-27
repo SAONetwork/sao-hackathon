@@ -3,6 +3,7 @@ package main
 import "github.com/gin-gonic/gin"
 
 type MockCollection struct {
+	Id uint
 	EthAddr     string
 	Preview     string `gorm:"varchar(255);"`
 	Labels      string
@@ -45,7 +46,7 @@ func CreateCollection(ctx *gin.Context) {
 // @Param signaturemessage header string true "user's ethereum signaturemessage"
 // @Param signature header string true "user's ethereum signature"
 // @Param	collectionId		path 	string	true		"The collection id for deletion"
-// @router /collection [delete]
+// @router /collection/{collectionId} [delete]
 func DeleteCollection(ctx *gin.Context) {
 }
 
@@ -92,4 +93,17 @@ func LikeCollection(ctx *gin.Context) {
 // @Param	collectionId		query 	string	false		"The collection id for unlike operation"
 // @router /collectionLike [delete]
 func UnLikeCollection(ctx *gin.Context) {
+}
+
+
+// @Tags Search
+// @Title GeneralSearch
+// @Description search files, collections and users etc.
+// @Param address header string false "user's ethereum address"
+// @Param signaturemessage header string false "user's ethereum signaturemessage"
+// @Param signature header string false "user's ethereum signature"
+// @Param	key		query 	string	true		"The key you want to search"
+// @Param	scope		query 	string	false		"Set search scope, file/collection/user"
+// @router /search [get]
+func GeneralSearch(ctx *gin.Context) {
 }

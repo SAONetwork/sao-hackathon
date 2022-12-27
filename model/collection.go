@@ -4,7 +4,6 @@ import (
 	"errors"
 	"golang.org/x/xerrors"
 	"gorm.io/gorm"
-	"time"
 )
 
 type Collection struct {
@@ -48,8 +47,8 @@ type CollectionRequest struct {
 
 type CollectionVO struct {
 	Id          uint
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt  int64
+	UpdatedAt  int64
 	Preview     string
 	Labels      string
 	Title       string
@@ -62,13 +61,19 @@ func (model *Model) CreateCollection(collection *Collection) error {
 	return model.DB.Create(collection).Error
 }
 
-func (model *Model) UpsertCollection(collection *Collection) (*Collection, error) {
-	var c Collection
-	result := model.DB.Where("id = ?", collection.Id).Assign(collection).FirstOrCreate(&c)
-	if result.Error != nil {
-		return nil, result.Error
+func (model *Model) UpsertCollection(collection *Collection) error {
+	if collection.Id <=0 {
+		return model.DB.Create(collection).Error
 	}
-	return &c, nil
+	var c Collection
+	result := model.DB.Where("id = ?", collection.Id).First(&c)
+	if result.Error != nil {
+		return result.Error
+	}
+	if c.Id > 0 {
+		return model.DB.Where("id = ?", collection.Id).Updates(collection).Error
+	}
+	return nil
 }
 
 func (model *Model) DeleteCollection(collectionId uint) error {
@@ -77,7 +82,8 @@ func (model *Model) DeleteCollection(collectionId uint) error {
 
 func (model *Model) GetSearchCollectionResult(key string) (*[]Collection, error) {
 	var collections []Collection
-	model.DB.Where("title like '%?%' or labels like '%?%' or `description` like '%?%'", key, key, key).Find(&collections)
+	bindKey := "%"+key+"%"
+	model.DB.Where("title like ? or labels like ? or `description` like ?", bindKey, bindKey, bindKey).Find(&collections)
 	return &collections, nil
 }
 

@@ -45,7 +45,7 @@ func (s *Server) CreateCollection(ctx *gin.Context) {
 	dc.SavePNG(preview)
 	collection.Preview = fmt.Sprintf("%s.png", id)
 
-	err = s.Model.CreateCollection(&collection)
+	err = s.Model.UpsertCollection(&collection)
 	if err != nil {
 		api.ServerError(ctx, "createCollection.error", err.Error())
 		return
@@ -117,14 +117,14 @@ func (s *Server) GetCollection(ctx *gin.Context) {
 	var result []model.CollectionVO
 	for _, c := range *collections {
 		result = append(result, model.CollectionVO{
-			Id: c.Id,
-			CreatedAt: c.CreatedAt,
-			UpdatedAt: c.UpdatedAt,
-			Preview: fmt.Sprintf("%s/%s/%s", s.Config.Host, "previews", c.Preview),
-			Title: c.Title,
-			Labels: c.Labels,
+			Id:          c.Id,
+			CreatedAt:   c.CreatedAt.UnixMilli(),
+			UpdatedAt:   c.UpdatedAt.UnixMilli(),
+			Preview:     fmt.Sprintf("%s/%s/%s", s.Config.Host, "previews", c.Preview),
+			Title:       c.Title,
+			Labels:      c.Labels,
 			Description: c.Description,
-			Type: c.Type,
+			Type:        c.Type,
 		})
 	}
 	api.Success(ctx, result)
@@ -154,7 +154,6 @@ func (s *Server) AddFileToCollection(ctx *gin.Context) {
 	}
 	api.Success(ctx, true)
 }
-
 
 func (s *Server) RemoveFileFromCollection(ctx *gin.Context) {
 	ethAddress, _ := ctx.Get("User")

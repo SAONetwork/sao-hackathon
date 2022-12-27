@@ -14,21 +14,26 @@ func (s *Server) GeneralSearch(ctx *gin.Context) {
 		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
 		return
 	}
-	key := ctx.Param("key")
+	key,_ := ctx.GetQuery("key")
 
 	searchScope,_ := ctx.GetQuery("scope")
 
 	switch searchScope {
 	case "collection":
-		fi,err := s.Model.GetSearchCollectionResult(key)
+		collections,err := s.Model.GetSearchCollectionResult(key)
 		if err != nil {
 			log.Error(err)
 			api.ServerError(ctx, "getSearchCollectionResult.error", err.Error())
 		}
-		api.Success(ctx, fi)
+		api.Success(ctx, collections)
 		return
 	case "user":
-		// todo
+		users,err := s.Model.GetSearchUserResult(key)
+		if err != nil {
+			log.Error(err)
+			api.ServerError(ctx, "getSearchUserResult.error", err.Error())
+		}
+		api.Success(ctx, users)
 		return
 	default:
 		fi := s.Model.GetSearchFileResult(key, ethAddress)

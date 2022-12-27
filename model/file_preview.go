@@ -130,17 +130,18 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 func (model *Model) GetSearchFileResult(key string, ethAddress string) []FileInfoInMarket {
 	var filePreviews []FilePreview
 
+	bindKey := "%"+key+"%"
 	model.DB.Raw("select *,\n" +
-		"       case when title like '%?%' then 3 else 0 end + \n" +
-		"       case when filename like '%?%' then 2 else 0 end + \n" +
-		"       case when labels like '%?%' then 3 else 0 end + \n" +
-		"       case when `description` like '%?%' then 1 else 0 end as matches \n" +
+		"       case when title like ? then 3 else 0 end + \n" +
+		"       case when filename like ? then 2 else 0 end + \n" +
+		"       case when labels like ? then 3 else 0 end + \n" +
+		"       case when `description` like ? then 1 else 0 end as matches \n" +
 		"  from file_previews \n" +
-		" where title like '%?%'\n" +
-		"    or filename like '%?%'\n" +
-		"    or labels like '%?%'\n" +
-		"    or `description` like '%?%'\n" +
-		" order by matches desc", key, key, key, key, key, key, key, key).Scan(&filePreviews)
+		" where title like ?\n" +
+		"    or filename like ?\n" +
+		"    or labels like ?\n" +
+		"    or `description` like ?\n" +
+		" order by matches desc", bindKey, bindKey, bindKey, bindKey, bindKey, bindKey, bindKey, bindKey).Scan(&filePreviews)
 
 	filesInfoInMarket := make([]FileInfoInMarket, 0)
 

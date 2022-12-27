@@ -5,6 +5,8 @@ definitions:
         type: string
       ethAddr:
         type: string
+      id:
+        type: integer
       labels:
         type: string
       preview:
@@ -29,32 +31,6 @@ info:
   contact: {}
 paths:
   /collection:
-    delete:
-      description: delete collection
-      parameters:
-      - description: user's ethereum address
-        in: header
-        name: address
-        required: true
-        type: string
-      - description: user's ethereum signaturemessage
-        in: header
-        name: signaturemessage
-        required: true
-        type: string
-      - description: user's ethereum signature
-        in: header
-        name: signature
-        required: true
-        type: string
-      - description: The collection id for deletion
-        in: path
-        name: collectionId
-        required: true
-        type: string
-      responses: {}
-      tags:
-      - Collection
     get:
       description: get collection by address
       parameters:
@@ -97,6 +73,33 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/main.MockCollection'
+      responses: {}
+      tags:
+      - Collection
+  /collection/{collectionId}:
+    delete:
+      description: delete collection
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The collection id for deletion
+        in: path
+        name: collectionId
+        required: true
+        type: string
       responses: {}
       tags:
       - Collection
@@ -208,4 +211,32 @@ paths:
       responses: {}
       tags:
       - Collection
+  /search:
+    get:
+      description: search files, collections and users etc.
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        type: string
+      - description: The key you want to search
+        in: query
+        name: key
+        required: true
+        type: string
+      - description: Set search scope, file/collection/user
+        in: query
+        name: scope
+        type: string
+      responses: {}
+      tags:
+      - Search
 swagger: "2.0"

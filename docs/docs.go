@@ -82,7 +82,9 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {}
-            },
+            }
+        },
+        "/collection/{collectionId}": {
             "delete": {
                 "description": "delete collection",
                 "tags": [
@@ -277,6 +279,48 @@ const docTemplate = `{
                 ],
                 "responses": {}
             }
+        },
+        "/search": {
+            "get": {
+                "description": "search files, collections and users etc.",
+                "tags": [
+                    "Search"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The key you want to search",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Set search scope, file/collection/user",
+                        "name": "scope",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
         }
     },
     "definitions": {
@@ -288,6 +332,9 @@ const docTemplate = `{
                 },
                 "ethAddr": {
                     "type": "string"
+                },
+                "id": {
+                    "type": "integer"
                 },
                 "labels": {
                     "type": "string"

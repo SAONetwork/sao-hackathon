@@ -58,7 +58,8 @@ func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.Han
 	noSignature := r.Group(contextPath + "/api/v1")
 	{
 		noSignature.GET("/fileInfos", s.FileInfos)
-		hackathon.GET("/file/:fileId", s.FileInfo)
+		noSignature.GET("/file/:fileId", s.FileInfo)
+		noSignature.GET("/search", s.GeneralSearch)
 	}
 
 	fmt.Println(s.Config.PreviewsPath)
