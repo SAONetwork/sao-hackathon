@@ -114,13 +114,11 @@ func (s *Server) AddFileToCollection(ctx *gin.Context) {
 		return
 	}
 
-	for _, collectionId := range collectionFile.CollectionIds {
-		err = s.Model.AddFileToCollection(collectionFile.FileId, collectionId, ethAddress.(string))
+		err = s.Model.AddFileToCollections(collectionFile.FileId, collectionFile.CollectionIds, ethAddress.(string))
 		if err != nil {
 			log.Error(err)
 			api.ServerError(ctx, "addFileToCollection.error", err.Error())
 		}
-	}
 	api.Success(ctx, true)
 }
 

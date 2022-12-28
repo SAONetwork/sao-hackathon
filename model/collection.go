@@ -139,23 +139,26 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 	return &result, nil
 }
 
-func (model *Model) AddFileToCollection(fileId uint, collectionId uint, ethAddr string) error {
+func (model *Model) AddFileToCollections(fileId uint, collectionIds []uint, ethAddr string) error {
 	err := model.DB.Transaction(func(tx *gorm.DB) error {
-		var count int64
-		tx.Model(&CollectionFile{}).Where("file_id = ? and collection_id = ? ", fileId, collectionId).Count(&count)
-		if count <= 0 {
-			tx.Model(&FilePreview{}).Where("id = ? ", fileId).Count(&count)
+		tx.Model(&CollectionFile{}).Where("file_id = ?", fileId).Delete(&CollectionFile{})
+		for _, collectionId := range collectionIds {
+			var count int64
+			tx.Model(&CollectionFile{}).Where("file_id = ? and collection_id = ? ", fileId, collectionId).Count(&count)
 			if count <= 0 {
-				return xerrors.Errorf("file id not exist: %d", fileId)
-			}
+				tx.Model(&FilePreview{}).Where("id = ? ", fileId).Count(&count)
+				if count <= 0 {
+					return xerrors.Errorf("file id not exist: %d", fileId)
+				}
 
-			collectionFile := CollectionFile{
-				CollectionId: collectionId,
-				FileId:  fileId,
-				EthAddr: ethAddr,
-			}
-			if err := tx.Create(&collectionFile).Error; err != nil {
-				return err
+				collectionFile := CollectionFile{
+					CollectionId: collectionId,
+					FileId:       fileId,
+					EthAddr:      ethAddr,
+				}
+				if err := tx.Create(&collectionFile).Error; err != nil {
+					return err
+				}
 			}
 		}
 		return nil
