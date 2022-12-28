@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"golang.org/x/xerrors"
 	"gorm.io/gorm"
 )
@@ -46,15 +47,17 @@ type CollectionRequest struct {
 }
 
 type CollectionVO struct {
-	Id          uint
-	CreatedAt  int64
-	UpdatedAt  int64
-	Preview     string
-	Labels      string
-	Title       string
-	Description string
-	Type        int
-	Liked		bool
+	Id           uint
+	CreatedAt    int64
+	UpdatedAt    int64
+	Preview      string
+	Labels       string
+	Title        string
+	Description  string
+	TotalFiles   int64
+	Type         int
+	Liked        bool
+	FileIncluded bool
 }
 
 func (model *Model) CreateCollection(collection *Collection) error {
@@ -87,28 +90,51 @@ func (model *Model) GetSearchCollectionResult(key string) (*[]Collection, error)
 	return &collections, nil
 }
 
-func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint) (*[]Collection, error) {
+func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint) (*[]CollectionVO, error) {
 	var collections []Collection
 	if collectionId > 0 {
 		var collection Collection
 		result := model.DB.First(&collection, collectionId)
 		if result.Error != nil {
-			return &collections, result.Error
+			return nil, result.Error
 		}
 		collections = append(collections, collection)
-		return &collections, nil
-	}
-
-	if ethAddr != "" {
+	} else if ethAddr != "" && fileID > 0 {
 		model.DB.Where("eth_addr = ?", ethAddr).Find(&collections)
-		return &collections, nil
-	}
-
-	if fileID > 0 {
+	} else if ethAddr != "" {
+		model.DB.Where("eth_addr = ?", ethAddr).Find(&collections)
+	} else if fileID > 0 {
 		var collectionFiles []CollectionFile
 		model.DB.Where("file_id = ?", fileID).Find(&collectionFiles)
 	}
-	return &collections, nil
+
+	var result []CollectionVO
+	for _, c := range collections {
+		var totalFiles int64
+		model.DB.Model(&CollectionFile{}).Where("collection_id = ? ", c.Id).Count(&totalFiles)
+
+		fileIncluded := false
+		if fileID > 0 {
+			var count int64
+			model.DB.Model(&CollectionFile{}).Where("file_id = ? and collection_id = ? ", fileID, c.Id).Count(&count)
+			if count > 0 {
+				fileIncluded = true
+			}
+		}
+		result = append(result, CollectionVO{
+			Id:          c.Id,
+			CreatedAt:   c.CreatedAt.UnixMilli(),
+			UpdatedAt:   c.UpdatedAt.UnixMilli(),
+			Preview:     fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview),
+			Title:       c.Title,
+			Labels:      c.Labels,
+			Description: c.Description,
+			Type:        c.Type,
+			TotalFiles: totalFiles,
+			FileIncluded: fileIncluded,
+		})
+	}
+	return &result, nil
 }
 
 func (model *Model) AddFileToCollection(fileId uint, collectionId uint, ethAddr string) error {

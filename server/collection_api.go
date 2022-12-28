@@ -96,21 +96,7 @@ func (s *Server) GetCollection(ctx *gin.Context) {
 	if err != nil {
 		log.Error(err)
 	}
-
-	var result []model.CollectionVO
-	for _, c := range *collections {
-		result = append(result, model.CollectionVO{
-			Id:          c.Id,
-			CreatedAt:   c.CreatedAt.UnixMilli(),
-			UpdatedAt:   c.UpdatedAt.UnixMilli(),
-			Preview:     fmt.Sprintf("%s/%s/%s", s.Config.Host, "previews", c.Preview),
-			Title:       c.Title,
-			Labels:      c.Labels,
-			Description: c.Description,
-			Type:        c.Type,
-		})
-	}
-	api.Success(ctx, result)
+	api.Success(ctx, collections)
 }
 
 func (s *Server) AddFileToCollection(ctx *gin.Context) {
