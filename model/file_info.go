@@ -48,6 +48,7 @@ type FileInfoInMarket struct {
 	AdditionalInfo string
 	FileExtension  string
 	WCid           string
+	Star           bool
 }
 
 type FileDetail struct {

@@ -29,6 +29,13 @@ type FilePreview struct {
 	AdditionalInfo string
 }
 
+type FileStar struct {
+	SaoModel
+	FilePreviewId uint
+	FilePreview FilePreview `gorm:"foreignKey:Id;references:FilePreviewId"`
+	EthAddr      string
+}
+
 type FilePreviewVO struct {
 	ID          uint
 	Preview     string
@@ -93,6 +100,14 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 			paid = true
 		}
 	}
+	star := false
+	if ethAddress != "" {
+		var starCount int64
+		model.DB.Model(&FileStar{}).Where("eth_addr = ? and file_preview_id = ? ", ethAddress, filePreview.Id).Count(&starCount)
+		if starCount > 0 {
+			star = true
+		}
+	}
 
 	var ipfsFileInfo FileInfo
 	if err := model.DB.Model(&FileInfo{}).Where("id = ?", filePreview.FileId).Find(&ipfsFileInfo).Error; err != nil {
@@ -119,7 +134,8 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 			FileCategory:   filePreview.FileCategory,
 			AdditionalInfo: filePreview.AdditionalInfo,
 			AlreadyPaid:    paid,
-			FileExtension:  fileExtension},
+			FileExtension:  fileExtension,
+		Star: star},
 		IpfsHash:        ipfsFileInfo.IpfsHash,
 		Size:            ipfsFileInfo.Size,
 		Cid:             ipfsFileInfo.Cid,
@@ -153,6 +169,14 @@ func (model *Model) GetSearchFileResult(key string, ethAddress string, offset in
 				paid = true
 			}
 		}
+		star := false
+		if ethAddress != "" {
+			var starCount int64
+			model.DB.Model(&FileStar{}).Where("eth_addr = ? and file_preview_id = ? ", ethAddress, filePreview.Id).Count(&starCount)
+			if starCount > 0 {
+				star = true
+			}
+		}
 		fileExtension := filepath.Ext(filePreview.Filename)
 		if fileExtension != "" {
 			fileExtension = fileExtension[1:]
@@ -173,7 +197,8 @@ func (model *Model) GetSearchFileResult(key string, ethAddress string, offset in
 			FileCategory: filePreview.FileCategory,
 			AdditionalInfo: filePreview.AdditionalInfo,
 			FileExtension: fileExtension,
-			AlreadyPaid:  paid})
+			AlreadyPaid:  paid,
+		Star: star})
 	}
 	return filesInfoInMarket
 }
@@ -207,27 +232,36 @@ func (model *Model) GetMarketFiles(limit int, offset int, ethAddress string, con
 				paid = true
 			}
 		}
+		star := false
+		if ethAddress != "" {
+			var starCount int64
+			model.DB.Model(&FileStar{}).Where("eth_addr = ? and file_preview_id = ? ", ethAddress, filePreview.Id).Count(&starCount)
+			if starCount > 0 {
+				star = true
+			}
+		}
 		fileExtension := filepath.Ext(filePreview.Filename)
 		if fileExtension != "" {
 			fileExtension = fileExtension[1:]
 		}
 		filesInfoInMarket = append(filesInfoInMarket, FileInfoInMarket{Id: filePreview.Id,
-			CreatedAt:    filePreview.CreatedAt,
-			UpdatedAt:    filePreview.UpdatedAt,
-			EthAddr:      filePreview.EthAddr,
-			Preview:      fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, filePreview.Preview),
-			Labels:       filePreview.Labels,
-			Price:        filePreview.Price,
-			Title:        filePreview.Title,
-			Description:  filePreview.Description,
-			ContentType:  filePreview.ContentType,
-			Type:         filePreview.Type,
-			Status:       filePreview.Status,
-			NftTokenId:   filePreview.NftTokenId,
-			FileCategory: filePreview.FileCategory,
+			CreatedAt:      filePreview.CreatedAt,
+			UpdatedAt:      filePreview.UpdatedAt,
+			EthAddr:        filePreview.EthAddr,
+			Preview:        fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, filePreview.Preview),
+			Labels:         filePreview.Labels,
+			Price:          filePreview.Price,
+			Title:          filePreview.Title,
+			Description:    filePreview.Description,
+			ContentType:    filePreview.ContentType,
+			Type:           filePreview.Type,
+			Status:         filePreview.Status,
+			NftTokenId:     filePreview.NftTokenId,
+			FileCategory:   filePreview.FileCategory,
 			AdditionalInfo: filePreview.AdditionalInfo,
-			FileExtension: fileExtension,
-			AlreadyPaid:  paid})
+			FileExtension:  fileExtension,
+			AlreadyPaid:    paid,
+			Star:           star})
 	}
 	return filesInfoInMarket, count
 }
@@ -268,6 +302,41 @@ func (model *Model) StoreFileMetadata(chunkMetadatas []FileChunkMetadata, fileId
 		if err = tx.Model(&FilePreview{}).Where("id", previewId).Updates(updateMap).Error; err != nil {
 			return err
 		}
+		return nil
+	})
+	return err
+}
+
+func (model *Model) StarFile(ethAddress string, fileId uint) error {
+	fileLike := FileStar{
+		FilePreviewId: fileId,
+		EthAddr:      ethAddress,
+	}
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		var count int64
+		tx.Model(&FileStar{}).Where("eth_addr = ? and file_preview_id = ? ", ethAddress, fileId).Count(&count)
+		if count <= 0 {
+			if err := tx.Create(&fileLike).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return err
+}
+
+func (model *Model) DeleteStarFile(ethAddress string, fileId uint) error {
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		var count int64
+		tx.Model(&FileStar{}).Where("eth_addr = ? and file_preview_id = ? ", ethAddress, fileId).Count(&count)
+		if count <= 0 {
+			return errors.New("the user" + ethAddress + " haven't clicked star yet:" + string(fileId))
+		}
+
+		if err := tx.Where("eth_addr = ? and file_preview_id = ? ", ethAddress, fileId).Delete(&FileStar{}).Error; err != nil {
+			return err
+		}
+
 		return nil
 	})
 	return err

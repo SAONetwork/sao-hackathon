@@ -95,6 +95,28 @@ func LikeCollection(ctx *gin.Context) {
 func UnLikeCollection(ctx *gin.Context) {
 }
 
+// @Tags File
+// @Title StarFile
+// @Description mark star to a file
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	fileId		query 	string	false		"The file id for star operation"
+// @router /fileStar [post]
+func StarFile(ctx *gin.Context) {
+}
+
+// @Tags File
+// @Title DeleteStarFile
+// @Description cancel star operation from file
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	fileId		query 	string	false		"The file id for delete star operation"
+// @router /fileStar [delete]
+func DeleteStarFile(ctx *gin.Context) {
+}
+
 
 // @Tags Search
 // @Title GeneralSearch

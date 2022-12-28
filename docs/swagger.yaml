@@ -211,6 +211,57 @@ paths:
       responses: {}
       tags:
       - Collection
+  /fileStar:
+    delete:
+      description: cancel star operation from file
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The file id for delete star operation
+        in: query
+        name: fileId
+        type: string
+      responses: {}
+      tags:
+      - File
+    post:
+      description: mark star to a file
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The file id for star operation
+        in: query
+        name: fileId
+        type: string
+      responses: {}
+      tags:
+      - File
   /search:
     get:
       description: search files, collections and users etc.

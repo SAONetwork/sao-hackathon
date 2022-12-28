@@ -37,6 +37,8 @@ func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.Han
 		hackathon.POST("/file/addFileWithPreview", s.AddFileWithPreview)
 		hackathon.DELETE("/file/upload/:previewId", s.DeleteUploaded)
 		hackathon.GET("/file/order/download/:fileId", s.Download)
+		hackathon.POST("/fileStar", s.StarFile)
+		hackathon.DELETE("/fileStar", s.DeleteStarFile)
 
 		hackathon.POST("/user", s.UpdateUserProfile)
 		hackathon.GET("/user", s.GetUserProfile)

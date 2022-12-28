@@ -238,3 +238,52 @@ func (s *Server) Download(ctx *gin.Context) {
 		return
 	}
 }
+
+
+func (s *Server) StarFile(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	fileIdParam, got := ctx.GetQuery("fileId")
+	if !got {
+		fileIdParam = "0"
+	}
+	fileId, err := strconv.ParseUint(fileIdParam, 10, 0)
+	if err != nil {
+		fileId = 0
+	}
+
+	err = s.Model.StarFile(ethAddress.(string), uint(fileId))
+	if err != nil {
+		log.Error(err)
+	}
+	api.Success(ctx, true)
+}
+
+func (s *Server) DeleteStarFile(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	fileIdParam, got := ctx.GetQuery("fileId")
+	if !got {
+		fileIdParam = "0"
+	}
+	fileId, err := strconv.ParseUint(fileIdParam, 10, 0)
+	if err != nil {
+		fileId = 0
+	}
+
+	err = s.Model.DeleteStarFile(ethAddress.(string), uint(fileId))
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "deleteStarFile.error", err.Error())
+		return
+	}
+	api.Success(ctx, true)
+}
