@@ -103,7 +103,7 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 	star := false
 	if ethAddress != "" {
 		var starCount int64
-		model.DB.Model(&FileStar{}).Where("eth_addr = ? and file_preview_id = ? ", ethAddress, filePreview.Id).Count(&starCount)
+		model.DB.Model(&CollectionFile{}).Where("eth_addr = ? and file_id = ? ", ethAddress, filePreview.Id).Count(&starCount)
 		if starCount > 0 {
 			star = true
 		}
@@ -172,7 +172,7 @@ func (model *Model) GetSearchFileResult(key string, ethAddress string, offset in
 		star := false
 		if ethAddress != "" {
 			var starCount int64
-			model.DB.Model(&FileStar{}).Where("eth_addr = ? and file_preview_id = ? ", ethAddress, filePreview.Id).Count(&starCount)
+			model.DB.Model(&CollectionFile{}).Where("eth_addr = ? and file_id = ? ", ethAddress, filePreview.Id).Count(&starCount)
 			if starCount > 0 {
 				star = true
 			}
@@ -235,7 +235,7 @@ func (model *Model) GetMarketFiles(limit int, offset int, ethAddress string, con
 		star := false
 		if ethAddress != "" {
 			var starCount int64
-			model.DB.Model(&FileStar{}).Where("eth_addr = ? and file_preview_id = ? ", ethAddress, filePreview.Id).Count(&starCount)
+			model.DB.Model(&CollectionFile{}).Where("eth_addr = ? and file_id = ? ", ethAddress, filePreview.Id).Count(&count)
 			if starCount > 0 {
 				star = true
 			}
