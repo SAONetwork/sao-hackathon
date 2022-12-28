@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func (s *Server) CreateCollection(ctx *gin.Context) {
+func (s *Server) UpsertCollection(ctx *gin.Context) {
 	ethAddress := ctx.GetHeader("address")
 	if ethAddress == "" {
 		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
@@ -30,7 +30,7 @@ func (s *Server) CreateCollection(ctx *gin.Context) {
 		return
 	}
 
-	if !strings.HasPrefix(collection.Preview, s.Config.Host) {
+	if collection.Preview != "" {
 		img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview)))
 		if err != nil {
 			log.Info(err)
@@ -53,25 +53,6 @@ func (s *Server) CreateCollection(ctx *gin.Context) {
 		return
 	}
 	api.Success(ctx, collection)
-}
-
-func (s *Server) EditCollection(ctx *gin.Context) {
-	ethAddress, _ := ctx.Get("User")
-	if ethAddress.(string) == "" {
-		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
-		return
-	}
-
-	var collection model.Collection
-	decoder := json.NewDecoder(ctx.Request.Body)
-	err := decoder.Decode(&collection)
-	if err != nil {
-		api.BadRequest(ctx, "invalid.param", err.Error())
-		return
-	}
-
-	s.Model.UpsertCollection(&collection)
-	api.Success(ctx, true)
 }
 
 func (s *Server) DeleteCollection(ctx *gin.Context) {

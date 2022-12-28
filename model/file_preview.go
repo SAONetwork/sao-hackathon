@@ -127,11 +127,11 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 	return &filesInfoInMarket, nil
 }
 
-func (model *Model) GetSearchFileResult(key string, ethAddress string) []FileInfoInMarket {
+func (model *Model) GetSearchFileResult(key string, ethAddress string, offset int, limit int) []FileInfoInMarket {
 	var filePreviews []FilePreview
 
 	bindKey := "%"+key+"%"
-	model.DB.Raw("select *,\n" +
+	model.DB.Offset(offset).Limit(limit).Raw("select *,\n" +
 		"       case when title like ? then 3 else 0 end + \n" +
 		"       case when filename like ? then 2 else 0 end + \n" +
 		"       case when labels like ? then 3 else 0 end + \n" +
