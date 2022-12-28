@@ -55,6 +55,7 @@ type CollectionVO struct {
 	Title        string
 	Description  string
 	TotalFiles   int64
+	MaxFiles     int64
 	Type         int
 	Liked        bool
 	FileIncluded bool
@@ -122,15 +123,16 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 			}
 		}
 		result = append(result, CollectionVO{
-			Id:          c.Id,
-			CreatedAt:   c.CreatedAt.UnixMilli(),
-			UpdatedAt:   c.UpdatedAt.UnixMilli(),
-			Preview:     fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview),
-			Title:       c.Title,
-			Labels:      c.Labels,
-			Description: c.Description,
-			Type:        c.Type,
-			TotalFiles: totalFiles,
+			Id:           c.Id,
+			CreatedAt:    c.CreatedAt.UnixMilli(),
+			UpdatedAt:    c.UpdatedAt.UnixMilli(),
+			Preview:      fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview),
+			Title:        c.Title,
+			Labels:       c.Labels,
+			Description:  c.Description,
+			Type:         c.Type,
+			TotalFiles:   totalFiles,
+			MaxFiles:     100,
 			FileIncluded: fileIncluded,
 		})
 	}
