@@ -235,7 +235,7 @@ func (model *Model) GetMarketFiles(limit int, offset int, ethAddress string, con
 		star := false
 		if ethAddress != "" {
 			var starCount int64
-			model.DB.Model(&CollectionFile{}).Where("eth_addr = ? and file_id = ? ", ethAddress, filePreview.Id).Count(&count)
+			model.DB.Model(&CollectionFile{}).Where("eth_addr = ? and file_id = ? ", ethAddress, filePreview.Id).Count(&starCount)
 			if starCount > 0 {
 				star = true
 			}
