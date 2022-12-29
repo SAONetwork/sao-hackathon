@@ -145,7 +145,7 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 			var count int64
 			model.DB.Model(&CollectionLike{}).Where("eth_addr = ? and collection_id = ? ", address, c.Id).Count(&count)
 			if count > 0 {
-				fileIncluded = true
+				liked = true
 			}
 		}
 		result = append(result, CollectionVO{
