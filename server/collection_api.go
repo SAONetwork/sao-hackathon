@@ -11,6 +11,7 @@ import (
 	"image/png"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"sao-datastore-storage/model"
 	"sao-datastore-storage/util/api"
 	"strconv"
@@ -256,19 +257,19 @@ func (s *Server) GetRecommendedTags(ctx *gin.Context) {
 		return
 	}
 
-	desc, got := ctx.GetQuery("desc")
+	desc, got := ctx.GetPostForm("desc")
 	if !got {
 		return
 	}
 
-	url := "https://api.textrazor.com/"
+	textRazorUrl := "https://api.textrazor.com/"
 	method := "POST"
 
-	payload := strings.NewReader("extractors=topics&text="+ desc)
+	payload := strings.NewReader("extractors=topics&text="+ url.QueryEscape(desc))
 
 	client := &http.Client {
 	}
-	req, err := http.NewRequest(method, url, payload)
+	req, err := http.NewRequest(method, textRazorUrl, payload)
 
 	if err != nil {
 		api.ServerError(ctx, "getRecommendedTags.error", err.Error())
@@ -293,11 +294,29 @@ func (s *Server) GetRecommendedTags(ctx *gin.Context) {
 	}
 
 	var textRazor TextRazorResponse
-	json.Unmarshal(body, &textRazor)
+	err = json.Unmarshal(body, &textRazor)
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "getRecommendedTags.error", err.Error())
+		return
+	}
 
 	var labels []string
-	for _, topic := range textRazor.Response.CoarseTopics {
+	labelIndex := 0
+	for _, coarseTopic := range textRazor.Response.CoarseTopics {
+		labels = append(labels, coarseTopic.Label)
+		labelIndex++
+		if labelIndex >= 2 {
+			break
+		}
+	}
+
+	for _, topic := range textRazor.Response.Topics {
 		labels = append(labels, topic.Label)
+		labelIndex++
+		if labelIndex >= 6 {
+			break
+		}
 	}
 
 	api.Success(ctx, strings.Join(labels, ","))

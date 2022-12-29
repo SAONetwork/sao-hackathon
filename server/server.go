@@ -47,7 +47,7 @@ func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.Han
 		hackathon.GET("/user/summary", s.GetUserSummary)
 
 		hackathon.GET("/collection", s.GetCollection)
-		hackathon.GET("/collection/recommendedTags", s.GetRecommendedTags)
+		hackathon.POST("/collection/recommendedTags", s.GetRecommendedTags)
 		hackathon.POST("/collection", s.UpsertCollection)
 		hackathon.DELETE("/collection/:collectionId", s.DeleteCollection)
 		hackathon.POST("/collectionFile", s.AddFileToCollection)

@@ -85,7 +85,7 @@ const docTemplate = `{
             }
         },
         "/collection/recommendedTags": {
-            "get": {
+            "post": {
                 "description": "get recommended tags for collection",
                 "tags": [
                     "Collection"
@@ -116,7 +116,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "get recommended tags by description",
                         "name": "desc",
-                        "in": "query",
+                        "in": "formData",
                         "required": true
                     }
                 ],

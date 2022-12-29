@@ -104,7 +104,7 @@ paths:
       tags:
       - Collection
   /collection/recommendedTags:
-    get:
+    post:
       description: get recommended tags for collection
       parameters:
       - description: user's ethereum address
@@ -123,7 +123,7 @@ paths:
         required: true
         type: string
       - description: get recommended tags by description
-        in: query
+        in: formData
         name: desc
         required: true
         type: string
