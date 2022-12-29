@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"sao-datastore-storage/model"
+	"sao-datastore-storage/util"
 	"sao-datastore-storage/util/api"
 	"strconv"
 	"strings"
@@ -75,6 +76,14 @@ func (s *Server) DeleteCollection(ctx *gin.Context) {
 }
 
 func (s *Server) GetCollection(ctx *gin.Context) {
+	ethAddress := ctx.GetHeader("address")
+	util.VerifySignature(ctx)
+	user, _ := ctx.Get("User")
+	if ethAddress != "" && user.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
 	collectionIdParam, got := ctx.GetQuery("collectionId")
 	if !got {
 		collectionIdParam = "0"
@@ -95,7 +104,7 @@ func (s *Server) GetCollection(ctx *gin.Context) {
 
 	owner, _ := ctx.GetQuery("owner")
 
-	collections, err := s.Model.GetCollection(uint(collectionId), owner, uint(fileId))
+	collections, err := s.Model.GetCollection(uint(collectionId), owner, uint(fileId), ethAddress)
 	if err != nil {
 		log.Error(err)
 	}
@@ -117,12 +126,18 @@ func (s *Server) AddFileToCollection(ctx *gin.Context) {
 		return
 	}
 
-		err = s.Model.AddFileToCollections(collectionFile.FileId, collectionFile.CollectionIds, ethAddress.(string))
-		if err != nil {
-			log.Error(err)
-			api.ServerError(ctx, "addFileToCollection.error", err.Error())
-		}
-	api.Success(ctx, true)
+	err = s.Model.AddFileToCollections(collectionFile.FileId, collectionFile.CollectionIds, ethAddress.(string))
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "addFileToCollection.error", err.Error())
+	}
+	var result bool
+	if len(collectionFile.CollectionIds) > 0{
+		result = true
+	} else {
+		result = false
+	}
+	api.Success(ctx, result)
 }
 
 func (s *Server) RemoveFileFromCollection(ctx *gin.Context) {

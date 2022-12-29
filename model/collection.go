@@ -83,17 +83,29 @@ func (model *Model) UpsertCollection(collection *Collection) error {
 }
 
 func (model *Model) DeleteCollection(collectionId uint) error {
-	return model.DB.Where("id = ?", collectionId).Delete(&Collection{}).Error
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&Collection{}).Where("id = ?", collectionId).Delete(&Collection{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&CollectionFile{}).Where("collection_id = ?", collectionId).Delete(&CollectionFile{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&CollectionLike{}).Where("collection_id = ?", collectionId).Delete(&CollectionLike{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
 }
 
 func (model *Model) GetSearchCollectionResult(key string) (*[]Collection, error) {
 	var collections []Collection
 	bindKey := "%" + key + "%"
-	model.DB.Where("title like ? or labels like ? or `description` like ?", bindKey, bindKey, bindKey).Find(&collections)
+	model.DB.Where("(title like ? or labels like ? or `description` like ?) and type = 0", bindKey, bindKey, bindKey).Find(&collections)
 	return &collections, nil
 }
 
-func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint) (*[]CollectionVO, error) {
+func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint, address string) (*[]CollectionVO, error) {
 	var collections []Collection
 	if collectionId > 0 {
 		var collection Collection
@@ -127,6 +139,15 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 				fileIncluded = true
 			}
 		}
+
+		liked := false
+		if fileID > 0 {
+			var count int64
+			model.DB.Model(&CollectionLike{}).Where("eth_addr = ? and collection_id = ? ", address, c.Id).Count(&count)
+			if count > 0 {
+				fileIncluded = true
+			}
+		}
 		result = append(result, CollectionVO{
 			Id:           c.Id,
 			CreatedAt:    c.CreatedAt.UnixMilli(),
@@ -141,6 +162,7 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 			MaxFiles:     100,
 			FileIncluded: fileIncluded,
 			TotalLikes:   totalLikes,
+			Liked:        liked,
 		})
 	}
 	return &result, nil

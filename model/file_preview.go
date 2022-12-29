@@ -145,7 +145,7 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 
 func (model *Model) GetFileInfosByCollectionId(collectionId string, ethAddress string, offset int, limit int) []FileInfoInMarket {
 	var filePreviews []FilePreview
-	model.DB.Offset(offset).Limit(limit).Raw("select p.* from file_previews p, collection_files f where f.file_id = p.id and f.deleted_at is null and f.collection_id = ?", collectionId).Scan(&filePreviews)
+	model.DB.Offset(offset).Limit(limit).Raw("select p.* from file_previews p, collection_files f where f.file_id = p.id and f.deleted_at is null and p.deleted_at is null and f.collection_id = ?", collectionId).Scan(&filePreviews)
 
 	filesInfoInMarket := make([]FileInfoInMarket, 0)
 
