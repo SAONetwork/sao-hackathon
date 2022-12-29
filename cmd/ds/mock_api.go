@@ -40,6 +40,19 @@ func GetRecommendedTags(ctx *gin.Context) {
 }
 
 // @Tags Collection
+// @Title GetFileInfosByCollectionId
+// @Description get file infos by collection id
+// @Param address header string false "user's ethereum address"
+// @Param signaturemessage header string false "user's ethereum signaturemessage"
+// @Param signature header string false "user's ethereum signature"
+// @Param	collectionId		query 	string	true		"The collection id for query"
+// @Param	offset		query 	string	false		"offset default 0"
+// @Param	limit		query 	string	false		"limit default 10"
+// @router /collection/fileInfos [get]
+func FileInfosByCollectionId(ctx *gin.Context) {
+}
+
+// @Tags Collection
 // @Title CreateCollection
 // @Description create collection
 // @Param address header string true "user's ethereum address"

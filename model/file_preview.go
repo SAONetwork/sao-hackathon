@@ -143,6 +143,54 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 	return &filesInfoInMarket, nil
 }
 
+func (model *Model) GetFileInfosByCollectionId(collectionId string, ethAddress string, offset int, limit int) []FileInfoInMarket {
+	var filePreviews []FilePreview
+	model.DB.Offset(offset).Limit(limit).Raw("select p.* from file_previews p, collection_files f where f.file_id = p.id and f.deleted_at is null and f.collection_id = ?", collectionId).Scan(&filePreviews)
+
+	filesInfoInMarket := make([]FileInfoInMarket, 0)
+
+	for _, filePreview := range filePreviews {
+		paid := false
+		if filePreview.Price.Cmp(decimal.NewFromInt(0))> 0 && ethAddress != "" {
+			order := model.GetPurchaseOrder(filePreview.Id, ethAddress)
+			if order.FileId > 0 {
+				paid = true
+			}
+		}
+		star := false
+		if ethAddress != "" {
+			var starCount int64
+			model.DB.Model(&CollectionFile{}).Where("eth_addr = ? and file_id = ? ", ethAddress, filePreview.Id).Count(&starCount)
+			if starCount > 0 {
+				star = true
+			}
+		}
+		fileExtension := filepath.Ext(filePreview.Filename)
+		if fileExtension != "" {
+			fileExtension = fileExtension[1:]
+		}
+		filesInfoInMarket = append(filesInfoInMarket, FileInfoInMarket{Id: filePreview.Id,
+			CreatedAt:    filePreview.CreatedAt,
+			UpdatedAt:    filePreview.UpdatedAt,
+			EthAddr:      filePreview.EthAddr,
+			Preview:      fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, filePreview.Preview),
+			Labels:       filePreview.Labels,
+			Price:        filePreview.Price,
+			Title:        filePreview.Title,
+			Description:  filePreview.Description,
+			ContentType:  filePreview.ContentType,
+			Type:         filePreview.Type,
+			Status:       filePreview.Status,
+			NftTokenId:   filePreview.NftTokenId,
+			FileCategory: filePreview.FileCategory,
+			AdditionalInfo: filePreview.AdditionalInfo,
+			FileExtension: fileExtension,
+			AlreadyPaid:  paid,
+			Star: star})
+	}
+	return filesInfoInMarket
+}
+
 func (model *Model) GetSearchFileResult(key string, ethAddress string, offset int, limit int) []FileInfoInMarket {
 	var filePreviews []FilePreview
 

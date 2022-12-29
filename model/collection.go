@@ -58,6 +58,7 @@ type CollectionVO struct {
 	MaxFiles     int64
 	Type         int
 	Liked        bool
+	TotalLikes int64
 	FileIncluded bool
 }
 
@@ -114,6 +115,9 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 		var totalFiles int64
 		model.DB.Model(&CollectionFile{}).Where("collection_id = ? ", c.Id).Count(&totalFiles)
 
+		var totalLikes int64
+		model.DB.Model(&CollectionLike{}).Where("collection_id = ? ", c.Id).Count(&totalLikes)
+
 		fileIncluded := false
 		if fileID > 0 {
 			var count int64
@@ -134,6 +138,7 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 			TotalFiles:   totalFiles,
 			MaxFiles:     100,
 			FileIncluded: fileIncluded,
+			TotalLikes:   totalLikes,
 		})
 	}
 	return &result, nil

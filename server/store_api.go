@@ -151,6 +151,40 @@ func (s *Server) FileInfo(ctx *gin.Context) {
 	api.Success(ctx, fi)
 }
 
+func (s *Server) FileInfosByCollectionId(ctx *gin.Context) {
+	ethAddress := ctx.GetHeader("address")
+	util.VerifySignature(ctx)
+	owner, _ := ctx.Get("User")
+	if ethAddress != "" && owner.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	offset, got := ctx.GetQuery("offset")
+	if !got {
+		offset = "0"
+	}
+	o, err := strconv.Atoi(offset)
+	if err != nil {
+		log.Info(err)
+		o = 0
+	}
+	limit, got := ctx.GetQuery("limit")
+	if !got {
+		limit = "10"
+	}
+	l, err := strconv.Atoi(limit)
+	if err != nil {
+		log.Info(err)
+		l = 10
+	}
+
+	collectionId,_ := ctx.GetQuery("collectionId")
+
+	fi := s.Model.GetFileInfosByCollectionId(collectionId, ethAddress, o, l)
+	api.Success(ctx, fi)
+}
+
 func (s *Server) FileInfos(ctx *gin.Context) {
 	ethAddress := ctx.GetHeader("address")
 	util.VerifySignature(ctx)

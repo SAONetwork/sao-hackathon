@@ -103,6 +103,38 @@ paths:
       responses: {}
       tags:
       - Collection
+  /collection/fileInfos:
+    get:
+      description: get file infos by collection id
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        type: string
+      - description: The collection id for query
+        in: query
+        name: collectionId
+        required: true
+        type: string
+      - description: offset default 0
+        in: query
+        name: offset
+        type: string
+      - description: limit default 10
+        in: query
+        name: limit
+        type: string
+      responses: {}
+      tags:
+      - Collection
   /collection/recommendedTags:
     post:
       description: get recommended tags for collection

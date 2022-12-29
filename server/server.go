@@ -63,6 +63,7 @@ func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.Han
 		noSignature.GET("/fileInfos", s.FileInfos)
 		noSignature.GET("/file/:fileId", s.FileInfo)
 		noSignature.GET("/search", s.GeneralSearch)
+		noSignature.GET("/collection/fileInfos", s.FileInfosByCollectionId)
 	}
 
 	fmt.Println(s.Config.PreviewsPath)
