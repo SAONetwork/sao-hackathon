@@ -29,3 +29,13 @@ type SubCommentVO struct {
 	Avatar string
 	Comment string
 }
+
+func (model *Model) AddComment(comment *FileComment) error {
+	return model.DB.Create(comment).Error
+}
+
+func (model *Model) GetFileComment(fileId string) *[]FileComment {
+	var comments []FileComment
+
+	return &comments
+}

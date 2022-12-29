@@ -215,9 +215,9 @@ func (model *Model) LikeCollection(ethAddress string, collectionId uint) error {
 	}
 	err := model.DB.Transaction(func(tx *gorm.DB) error {
 		var count int64
-		tx.Model(&Collection{}).Where("collection_id = ? ", collectionId).Count(&count)
+		tx.Model(&Collection{}).Where("id = ? ", collectionLike.CollectionId).Count(&count)
 		if count <= 0 {
-			return errors.New("the collection not exist :" + string(collectionId))
+			return xerrors.Errorf("the collection not exist : %d", collectionLike.CollectionId)
 		}
 		tx.Model(&CollectionLike{}).Where("eth_addr = ? and collection_id = ? ", ethAddress, collectionId).Count(&count)
 		if count <= 0 {

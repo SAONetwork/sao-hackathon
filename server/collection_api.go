@@ -192,6 +192,8 @@ func (s *Server) LikeCollection(ctx *gin.Context) {
 	err = s.Model.LikeCollection(ethAddress.(string), uint(collectionId))
 	if err != nil {
 		log.Error(err)
+		api.ServerError(ctx, "likeCollection.error", err.Error())
+		return
 	}
 	api.Success(ctx, true)
 }
