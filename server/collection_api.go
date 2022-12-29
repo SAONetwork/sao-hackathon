@@ -9,6 +9,8 @@ import (
 	"github.com/google/uuid"
 	"image/jpeg"
 	"image/png"
+	"io/ioutil"
+	"net/http"
 	"sao-datastore-storage/model"
 	"sao-datastore-storage/util/api"
 	"strconv"
@@ -245,4 +247,58 @@ func (s *Server) DeleteStarCollection(ctx *gin.Context) {
 		log.Error(err)
 	}
 	api.Success(ctx, true)
+}
+
+func (s *Server) GetRecommendedTags(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	desc, got := ctx.GetQuery("desc")
+	if !got {
+		return
+	}
+
+	url := "https://api.textrazor.com/"
+	method := "POST"
+
+	payload := strings.NewReader("extractors=topics&text="+ desc)
+
+	client := &http.Client {
+	}
+	req, err := http.NewRequest(method, url, payload)
+
+	if err != nil {
+		api.ServerError(ctx, "getRecommendedTags.error", err.Error())
+		return
+	}
+	req.Header.Add("x-textrazor-key", "ab968d7fd7770398cd498757947a58d9334377387d7a707a161ce108")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	res, err := client.Do(req)
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "getRecommendedTags.error", err.Error())
+		return
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "getRecommendedTags.error", err.Error())
+		return
+	}
+
+	var textRazor TextRazorResponse
+	json.Unmarshal(body, &textRazor)
+
+	var labels []string
+	for _, topic := range textRazor.Response.CoarseTopics {
+		labels = append(labels, topic.Label)
+	}
+
+	api.Success(ctx, strings.Join(labels, ","))
 }

@@ -103,6 +103,33 @@ paths:
       responses: {}
       tags:
       - Collection
+  /collection/recommendedTags:
+    get:
+      description: get recommended tags for collection
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: get recommended tags by description
+        in: query
+        name: desc
+        required: true
+        type: string
+      responses: {}
+      tags:
+      - Collection
   /collectionFile:
     delete:
       description: remove file from collection

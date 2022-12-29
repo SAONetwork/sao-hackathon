@@ -29,6 +29,17 @@ func GetCollection(ctx *gin.Context) {
 }
 
 // @Tags Collection
+// @Title GetRecommendedTags
+// @Description get recommended tags for collection
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	desc		query 	string	true		"get recommended tags by description"
+// @router /collection/recommendedTags [get]
+func GetRecommendedTags(ctx *gin.Context) {
+}
+
+// @Tags Collection
 // @Title CreateCollection
 // @Description create collection
 // @Param address header string true "user's ethereum address"
