@@ -141,7 +141,7 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 		}
 
 		liked := false
-		if fileID > 0 {
+		if collectionId > 0 {
 			var count int64
 			model.DB.Model(&CollectionLike{}).Where("eth_addr = ? and collection_id = ? ", address, c.Id).Count(&count)
 			if count > 0 {
@@ -215,6 +215,10 @@ func (model *Model) LikeCollection(ethAddress string, collectionId uint) error {
 	}
 	err := model.DB.Transaction(func(tx *gorm.DB) error {
 		var count int64
+		tx.Model(&Collection{}).Where("collection_id = ? ", collectionId).Count(&count)
+		if count <= 0 {
+			return errors.New("the collection not exist :" + string(collectionId))
+		}
 		tx.Model(&CollectionLike{}).Where("eth_addr = ? and collection_id = ? ", ethAddress, collectionId).Count(&count)
 		if count <= 0 {
 			if err := tx.Create(&collectionLike).Error; err != nil {
