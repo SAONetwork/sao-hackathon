@@ -20,20 +20,20 @@ type Collection struct {
 type CollectionLike struct {
 	SaoModel
 	CollectionId uint
-	Collection Collection `gorm:"foreignKey:Id;references:CollectionId"`
+	Collection   Collection `gorm:"foreignKey:Id;references:CollectionId"`
 	EthAddr      string
 }
 
 type CollectionStar struct {
 	SaoModel
 	CollectionId uint
-	Collection Collection `gorm:"foreignKey:Id;references:CollectionId"`
+	Collection   Collection `gorm:"foreignKey:Id;references:CollectionId"`
 	EthAddr      string
 }
 
 type CollectionFile struct {
 	SaoModel
-	Collection Collection  `gorm:"foreignKey:Id;references:CollectionId"`
+	Collection   Collection `gorm:"foreignKey:Id;references:CollectionId"`
 	CollectionId uint
 	FileId       uint
 	EthAddr      string
@@ -42,14 +42,15 @@ type CollectionFile struct {
 
 type CollectionRequest struct {
 	CollectionIds []uint
-	FileId       uint
-	Status       int
+	FileId        uint
+	Status        int
 }
 
 type CollectionVO struct {
 	Id           uint
 	CreatedAt    int64
 	UpdatedAt    int64
+	EthAddr      string
 	Preview      string
 	Labels       string
 	Title        string
@@ -58,7 +59,7 @@ type CollectionVO struct {
 	MaxFiles     int64
 	Type         int
 	Liked        bool
-	TotalLikes int64
+	TotalLikes   int64
 	FileIncluded bool
 }
 
@@ -67,7 +68,7 @@ func (model *Model) CreateCollection(collection *Collection) error {
 }
 
 func (model *Model) UpsertCollection(collection *Collection) error {
-	if collection.Id <=0 {
+	if collection.Id <= 0 {
 		return model.DB.Create(collection).Error
 	}
 	var c Collection
@@ -87,7 +88,7 @@ func (model *Model) DeleteCollection(collectionId uint) error {
 
 func (model *Model) GetSearchCollectionResult(key string) (*[]Collection, error) {
 	var collections []Collection
-	bindKey := "%"+key+"%"
+	bindKey := "%" + key + "%"
 	model.DB.Where("title like ? or labels like ? or `description` like ?", bindKey, bindKey, bindKey).Find(&collections)
 	return &collections, nil
 }
@@ -130,6 +131,7 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 			Id:           c.Id,
 			CreatedAt:    c.CreatedAt.UnixMilli(),
 			UpdatedAt:    c.UpdatedAt.UnixMilli(),
+			EthAddr:      c.EthAddr,
 			Preview:      fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview),
 			Title:        c.Title,
 			Labels:       c.Labels,
@@ -187,7 +189,7 @@ func (model *Model) RemoveFileFromCollection(ethAddress string, fileId uint, col
 func (model *Model) LikeCollection(ethAddress string, collectionId uint) error {
 	collectionLike := CollectionLike{
 		CollectionId: collectionId,
-		EthAddr: ethAddress,
+		EthAddr:      ethAddress,
 	}
 	err := model.DB.Transaction(func(tx *gorm.DB) error {
 		var count int64
@@ -207,7 +209,7 @@ func (model *Model) UnlikeCollection(ethAddress string, collectionId uint) error
 		var count int64
 		tx.Model(&CollectionLike{}).Where("eth_addr = ? and collection_id = ? ", ethAddress, collectionId).Count(&count)
 		if count <= 0 {
-			return errors.New("the user" + ethAddress +" haven't clicked like yet:" + string(collectionId))
+			return errors.New("the user" + ethAddress + " haven't clicked like yet:" + string(collectionId))
 		}
 
 		if err := tx.Where("eth_addr = ? and collection_id = ? ", ethAddress, collectionId).Delete(&CollectionLike{}).Error; err != nil {
@@ -222,7 +224,7 @@ func (model *Model) UnlikeCollection(ethAddress string, collectionId uint) error
 func (model *Model) StarCollection(ethAddress string, collectionId uint) error {
 	collectionLike := CollectionStar{
 		CollectionId: collectionId,
-		EthAddr: ethAddress,
+		EthAddr:      ethAddress,
 	}
 	err := model.DB.Transaction(func(tx *gorm.DB) error {
 		var count int64
