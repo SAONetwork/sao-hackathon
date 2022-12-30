@@ -94,14 +94,14 @@ func (model *Model) GetFileComment(fileId uint) (*[]CommentVO, error) {
 
 	var result []CommentVO
 	for _, comment := range comments {
-		commentVO := CommentVO{Id: comment.Id, ObjectId: string(fileId), DateTime: comment.CreatedAt.UnixMilli(), EthAddr: comment.EthAddr, Comment: comment.Comment}
+		commentVO := CommentVO{Id: comment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: comment.CreatedAt.UnixMilli(), EthAddr: comment.EthAddr, Comment: comment.Comment}
 
 		childrenIds := strings.Split(comment.Children, ",")
 		var subComments []FileComment
 		model.DB.Order("id desc").Where("id in ?", childrenIds).Find(&subComments)
 
 		for _, subComment := range subComments {
-			subCommentVO := SubCommentVO{Id: subComment.Id, ObjectId: string(fileId), DateTime: subComment.CreatedAt.UnixMilli(), EthAddr: subComment.EthAddr, Comment: subComment.Comment}
+			subCommentVO := SubCommentVO{Id: subComment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: subComment.CreatedAt.UnixMilli(), EthAddr: subComment.EthAddr, Comment: subComment.Comment}
 			commentVO.SubComments = append(commentVO.SubComments, subCommentVO)
 		}
 
@@ -138,7 +138,7 @@ func (model *Model) UnlikeFileComment(ethAddress string, commentId uint) error {
 		var count int64
 		tx.Model(&FileCommentLike{}).Where("eth_addr = ? and comment_id = ? ", ethAddress, commentId).Count(&count)
 		if count <= 0 {
-			return errors.New("the user" + ethAddress + " haven't clicked like yet:" + string(commentId))
+			return errors.New("the user" + ethAddress + " haven't clicked like yet:" + strconv.FormatUint(uint64(commentId), 10))
 		}
 
 		if err := tx.Where("eth_addr = ? and comment_id = ? ", ethAddress, commentId).Delete(&FileCommentLike{}).Error; err != nil {
