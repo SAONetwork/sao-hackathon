@@ -367,6 +367,177 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/comment/file": {
+            "get": {
+                "description": "get file comments",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The file id for query",
+                        "name": "fileId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "post": {
+                "description": "add file comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "body for request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.MockFileComment"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/comment/file/{commentId}": {
+            "delete": {
+                "description": "delete file comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comment id for deletion",
+                        "name": "commentId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/comment/like": {
+            "post": {
+                "description": "like file comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comment id for like operation",
+                        "name": "commentId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "description": "unlike file comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comment id for unlike operation",
+                        "name": "commentId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/fileStar": {
             "post": {
                 "description": "mark star to a file",
@@ -524,6 +695,20 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "main.MockFileComment": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "string"
+                },
+                "fileId": {
+                    "type": "integer"
+                },
+                "parentId": {
                     "type": "integer"
                 }
             }

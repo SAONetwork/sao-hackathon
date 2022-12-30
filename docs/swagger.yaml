@@ -27,6 +27,15 @@ definitions:
       status:
         type: integer
     type: object
+  main.MockFileComment:
+    properties:
+      comment:
+        type: string
+      fileId:
+        type: integer
+      parentId:
+        type: integer
+    type: object
 info:
   contact: {}
 paths:
@@ -270,6 +279,124 @@ paths:
       responses: {}
       tags:
       - Collection
+  /comment/file:
+    get:
+      description: get file comments
+      parameters:
+      - description: The file id for query
+        in: query
+        name: fileId
+        type: string
+      responses: {}
+      tags:
+      - Comment
+    post:
+      description: add file comment
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: body for request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.MockFileComment'
+      responses: {}
+      tags:
+      - Comment
+  /comment/file/{commentId}:
+    delete:
+      description: delete file comment
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The comment id for deletion
+        in: path
+        name: commentId
+        required: true
+        type: string
+      responses: {}
+      tags:
+      - Comment
+  /comment/like:
+    delete:
+      description: unlike file comment
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The comment id for unlike operation
+        in: query
+        name: commentId
+        required: true
+        type: string
+      responses: {}
+      tags:
+      - Comment
+    post:
+      description: like file comment
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The comment id for like operation
+        in: query
+        name: commentId
+        required: true
+        type: string
+      responses: {}
+      tags:
+      - Comment
   /fileStar:
     delete:
       description: cancel star operation from file

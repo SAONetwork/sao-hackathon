@@ -18,6 +18,12 @@ type MockCollectionRequest struct {
 	Status       int
 }
 
+type MockFileComment struct {
+	Comment  string
+	FileId   uint
+	ParentId uint
+}
+
 // @Tags Collection
 // @Title GetCollection
 // @Description get collection by address
@@ -152,4 +158,57 @@ func DeleteStarFile(ctx *gin.Context) {
 // @Param	scope		query 	string	false		"Set search scope, file/collection/user"
 // @router /search [get]
 func GeneralSearch(ctx *gin.Context) {
+}
+
+
+// @Tags Comment
+// @Title AddFileComment
+// @Description add file comment
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	body		body 	MockFileComment	true		"body for request"
+// @router /comment/file [post]
+func AddFileComment(ctx *gin.Context) {
+}
+
+// @Tags Comment
+// @Title DeleteFileComment
+// @Description delete file comment
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	commentId		path 	string	true		"The comment id for deletion"
+// @router /comment/file/{commentId} [delete]
+func DeleteFileComment(ctx *gin.Context) {
+}
+
+// @Tags Comment
+// @Title GetFileComments
+// @Description get file comments
+// @Param	fileId		query 	string	false		"The file id for query"
+// @router /comment/file [get]
+func GetFileComments(ctx *gin.Context) {
+}
+
+// @Tags Comment
+// @Title LikeFileComment
+// @Description like file comment
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	commentId		query 	string	true		"The comment id for like operation"
+// @router /comment/like [post]
+func LikeFileComment(ctx *gin.Context) {
+}
+
+// @Tags Comment
+// @Title UnLikeFileComment
+// @Description unlike file comment
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	commentId		query 	string	true		"The comment id for unlike operation"
+// @router /comment/like [delete]
+func UnLikeFileComment(ctx *gin.Context) {
 }

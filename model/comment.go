@@ -1,41 +1,151 @@
 package model
 
+import (
+	"errors"
+	"golang.org/x/xerrors"
+	"gorm.io/gorm"
+	"strconv"
+	"strings"
+)
+
 type FileComment struct {
 	SaoModel
 	EthAddr  string
-	Comment   string
-	ParentId  uint
+	Comment  string
+	FileId   uint
+	ParentId uint
+	Children string
 }
 
 type FileCommentLike struct {
 	SaoModel
-	EthAddr  string
-	CommentId   uint
+	EthAddr   string
+	CommentId uint
 }
 
 type CommentVO struct {
-	Id uint
-	DateTime int64
-	EthAddr string
-	Avatar string
-	Comment string
+	Id          uint
+	ObjectId    string
+	DateTime    int64
+	EthAddr     string
+	Avatar      string
+	Comment     string
+	TotalLikes int64
 	SubComments []SubCommentVO
 }
 
 type SubCommentVO struct {
-	Id uint
+	Id       uint
+	ObjectId string
 	DateTime int64
-	EthAddr string
-	Avatar string
-	Comment string
+	EthAddr  string
+	Avatar   string
+	Comment  string
+	TotalLikes int64
 }
 
-func (model *Model) AddComment(comment *FileComment) error {
-	return model.DB.Create(comment).Error
+func (model *Model) AddFileComment(comment *FileComment) error {
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&FileComment{}).Create(&comment).Error; err != nil {
+			return err
+		}
+
+		if comment.ParentId > 0 {
+			var parentComment FileComment
+			tx.Model(&FileComment{}).Where("id = ?", comment.ParentId).First(&parentComment)
+			if parentComment.Id <= 0 {
+				return xerrors.Errorf("parent not found: %d", comment.ParentId)
+			}
+			childrenIds := strings.Split(parentComment.Children, ",")
+			childrenIds = append([]string{strconv.FormatUint(uint64(comment.Id), 10)}, childrenIds...)
+			if err := tx.Model(&FileComment{}).Where("id = ?", comment.ParentId).Update("children", strings.Join(childrenIds, ",")).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return err
 }
 
-func (model *Model) GetFileComment(fileId string) *[]FileComment {
+func (model *Model) DeleteFileComment(commentId uint) error {
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		var toDelete FileComment
+		tx.Model(&FileComment{}).Where("id = ?", commentId).First(&toDelete)
+		if toDelete.Id <= 0 {
+			return xerrors.Errorf("The comment is not existing: %d", commentId)
+		}
+		if err := tx.Model(&FileComment{}).Where("id = ?", commentId).Delete(&FileComment{}).Error; err != nil {
+			return err
+		}
+		childrenIds := strings.Split(toDelete.Children, ",")
+		for _, childId := range childrenIds {
+			if err := tx.Model(&FileComment{}).Where("id = ?", childId).Delete(&FileComment{}).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return err
+}
+
+func (model *Model) GetFileComment(fileId uint) (*[]CommentVO, error) {
 	var comments []FileComment
+	model.DB.Order("id desc").Where("file_id = ? and parent_id = 0", fileId).Find(&comments)
 
-	return &comments
+	var result []CommentVO
+	for _, comment := range comments {
+		commentVO := CommentVO{Id: comment.Id, ObjectId: string(fileId), DateTime: comment.CreatedAt.UnixMilli(), EthAddr: comment.EthAddr, Comment: comment.Comment}
+
+		childrenIds := strings.Split(comment.Children, ",")
+		var subComments []FileComment
+		model.DB.Order("id desc").Where("id in ?", childrenIds).Find(&subComments)
+
+		for _, subComment := range subComments {
+			subCommentVO := SubCommentVO{Id: subComment.Id, ObjectId: string(fileId), DateTime: subComment.CreatedAt.UnixMilli(), EthAddr: subComment.EthAddr, Comment: subComment.Comment}
+			commentVO.SubComments = append(commentVO.SubComments, subCommentVO)
+		}
+
+		result = append(result, commentVO)
+	}
+	return &result, nil
+}
+
+
+func (model *Model) LikeFileComment(ethAddress string, commentId uint) error {
+	commentLike := FileCommentLike{
+		CommentId: commentId,
+		EthAddr:      ethAddress,
+	}
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		var count int64
+		tx.Model(&FileComment{}).Where("id = ? ", commentLike.CommentId).Count(&count)
+		if count <= 0 {
+			return xerrors.Errorf("the comment not exist : %d", commentLike.CommentId)
+		}
+		tx.Model(&FileCommentLike{}).Where("eth_addr = ? and comment_id = ? ", ethAddress, commentId).Count(&count)
+		if count <= 0 {
+			if err := tx.Create(&commentLike).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return err
+}
+
+func (model *Model) UnlikeFileComment(ethAddress string, commentId uint) error {
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		var count int64
+		tx.Model(&FileCommentLike{}).Where("eth_addr = ? and comment_id = ? ", ethAddress, commentId).Count(&count)
+		if count <= 0 {
+			return errors.New("the user" + ethAddress + " haven't clicked like yet:" + string(commentId))
+		}
+
+		if err := tx.Where("eth_addr = ? and comment_id = ? ", ethAddress, commentId).Delete(&FileCommentLike{}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+	return err
 }
