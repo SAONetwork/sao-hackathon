@@ -57,6 +57,8 @@ type FileDetail struct {
 	Size            int64
 	Cid             string
 	StorageProvider string
+	TotalComments int64
+	TotalCollections int64
 }
 
 type PagedFileInfoInMarket struct {

@@ -117,6 +117,13 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 	if fileExtension != "" {
 		fileExtension = fileExtension[1:]
 	}
+
+	var TotalComments int64
+	model.DB.Model(&FileComment{}).Where("parent_id <= 0 and file_id = ? ", filePreview.Id).Count(&TotalComments)
+
+	var TotalCollections int64
+	model.DB.Model(&CollectionFile{}).Where("file_id = ? ", filePreview.Id).Count(&TotalCollections)
+
 	filesInfoInMarket := FileDetail{
 		FileInfoInMarket: FileInfoInMarket{Id: filePreview.Id,
 			CreatedAt:      filePreview.CreatedAt,
@@ -135,11 +142,13 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 			AdditionalInfo: filePreview.AdditionalInfo,
 			AlreadyPaid:    paid,
 			FileExtension:  fileExtension,
-		Star: star},
-		IpfsHash:        ipfsFileInfo.IpfsHash,
-		Size:            ipfsFileInfo.Size,
-		Cid:             ipfsFileInfo.Cid,
-		StorageProvider: ipfsFileInfo.StorageProvider}
+			Star:           star},
+		IpfsHash:         ipfsFileInfo.IpfsHash,
+		Size:             ipfsFileInfo.Size,
+		Cid:              ipfsFileInfo.Cid,
+		StorageProvider:  ipfsFileInfo.StorageProvider,
+		TotalComments:    TotalComments,
+		TotalCollections: TotalCollections}
 	return &filesInfoInMarket, nil
 }
 
