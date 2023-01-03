@@ -15,6 +15,7 @@ type FileComment struct {
 	FileId   uint
 	ParentId uint
 	Children string
+	Status int `gorm:"type:int(11);default:0"`
 }
 
 type FileCommentLike struct {
@@ -32,6 +33,7 @@ type CommentVO struct {
 	Editable    bool
 	Avatar      string
 	Comment     string
+	Liked bool
 	TotalLikes    int64
 	ParentComment *ParentCommentVO
 }
@@ -42,10 +44,9 @@ type ParentCommentVO struct {
 	DateTime   int64
 	EthAddr    string
 	UserName   string
-	Editable   bool
 	Avatar     string
 	Comment    string
-	TotalLikes int64
+	Status string
 }
 
 func (model *Model) AddFileComment(comment *FileComment) (*CommentVO, error) {
@@ -85,14 +86,8 @@ func (model *Model) DeleteFileComment(commentId uint) error {
 		if toDelete.Id <= 0 {
 			return xerrors.Errorf("The comment is not existing: %d", commentId)
 		}
-		if err := tx.Model(&FileComment{}).Where("id = ?", commentId).Delete(&FileComment{}).Error; err != nil {
+		if err := tx.Model(&FileComment{}).Where("id = ?", commentId).Update("status", 2).Error; err != nil {
 			return err
-		}
-		childrenIds := strings.Split(toDelete.Children, ",")
-		for _, childId := range childrenIds {
-			if err := tx.Model(&FileComment{}).Where("id = ?", childId).Delete(&FileComment{}).Error; err != nil {
-				return err
-			}
 		}
 		return nil
 	})
@@ -101,23 +96,34 @@ func (model *Model) DeleteFileComment(commentId uint) error {
 
 func (model *Model) GetFileComment(fileId uint, address string) (*[]CommentVO, error) {
 	var comments []FileComment
-	model.DB.Order("id desc").Where("file_id = ?", fileId).Find(&comments)
+	model.DB.Order("id desc").Where("status != 2 and file_id = ?", fileId).Find(&comments)
 
 	var result []CommentVO
 	for _, comment := range comments {
 		var user UserProfile
 		model.DB.Model(&UserProfile{}).Where("eth_addr = ?", comment.EthAddr).First(&user)
+
+		var liked int64
+		model.DB.Model(&FileCommentLike{}).Where("eth_addr = ? and comment_id = ? ", address, comment.Id).Count(&liked)
+
+		var totalLikes int64
+		model.DB.Model(&FileCommentLike{}).Where("comment_id = ? ", comment.Id).Count(&totalLikes)
+
 		commentVO := CommentVO{Id: comment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: comment.CreatedAt.UnixMilli(), EthAddr: comment.EthAddr, Comment: comment.Comment, UserName: user.Username, Avatar: user.Avatar,
-			Editable: comment.EthAddr == address}
+			Editable: comment.EthAddr == address, Liked: liked>0, TotalLikes: totalLikes}
 
 		if comment.ParentId > 0 {
 			var parentComment FileComment
 			model.DB.Where("id = ?", comment.ParentId).Find(&parentComment)
 
-			var subCommentUser UserProfile
-			model.DB.Model(&UserProfile{}).Where("eth_addr = ?", comment.EthAddr).First(&subCommentUser)
-			parentCommentVO := ParentCommentVO{Id: parentComment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: parentComment.CreatedAt.UnixMilli(), EthAddr: parentComment.EthAddr, Comment: parentComment.Comment, UserName: subCommentUser.Username, Avatar: subCommentUser.Avatar,
-				Editable: comment.EthAddr == address}
+			var parentCommentVO ParentCommentVO
+			if parentComment.Status == 2{
+				parentCommentVO = ParentCommentVO{Id: parentComment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: parentComment.CreatedAt.UnixMilli(), EthAddr: parentComment.EthAddr, Status: "deleted"}
+			} else {
+				var subCommentUser UserProfile
+				model.DB.Model(&UserProfile{}).Where("eth_addr = ?", comment.EthAddr).First(&subCommentUser)
+				parentCommentVO = ParentCommentVO{Id: parentComment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: parentComment.CreatedAt.UnixMilli(), EthAddr: parentComment.EthAddr, Comment: parentComment.Comment, UserName: subCommentUser.Username, Avatar: subCommentUser.Avatar}
+			}
 			commentVO.ParentComment = &parentCommentVO
 		}
 

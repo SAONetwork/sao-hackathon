@@ -45,7 +45,12 @@ func (s *Server) DeleteFileComment(ctx *gin.Context) {
 		api.BadRequest(ctx, "invalid.param.commentId", err.Error())
 		return
 	}
-	s.Model.DeleteFileComment(uint(commentId))
+	err = s.Model.DeleteFileComment(uint(commentId))
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "deleteFileComment.error", err.Error())
+		return
+	}
 	api.Success(ctx, true)
 }
 
