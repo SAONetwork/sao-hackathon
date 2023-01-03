@@ -67,7 +67,7 @@ func (s *Server) GetFileComments(ctx *gin.Context) {
 		fileId = 0
 	}
 
-	comments, err := s.Model.GetFileComment(uint(fileId))
+	comments, err := s.Model.GetFileComment(uint(fileId), ethAddress)
 	if err != nil {
 		log.Error(err)
 		api.ServerError(ctx, "getFileComments.error", err.Error())

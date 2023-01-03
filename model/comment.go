@@ -28,19 +28,23 @@ type CommentVO struct {
 	ObjectId    string
 	DateTime    int64
 	EthAddr     string
+	UserName    string
+	Editable    bool
 	Avatar      string
 	Comment     string
-	TotalLikes int64
+	TotalLikes  int64
 	SubComments []SubCommentVO
 }
 
 type SubCommentVO struct {
-	Id       uint
-	ObjectId string
-	DateTime int64
-	EthAddr  string
-	Avatar   string
-	Comment  string
+	Id         uint
+	ObjectId   string
+	DateTime   int64
+	EthAddr    string
+	UserName   string
+	Editable   bool
+	Avatar     string
+	Comment    string
 	TotalLikes int64
 }
 
@@ -88,20 +92,26 @@ func (model *Model) DeleteFileComment(commentId uint) error {
 	return err
 }
 
-func (model *Model) GetFileComment(fileId uint) (*[]CommentVO, error) {
+func (model *Model) GetFileComment(fileId uint, address string) (*[]CommentVO, error) {
 	var comments []FileComment
 	model.DB.Order("id desc").Where("file_id = ? and parent_id = 0", fileId).Find(&comments)
 
 	var result []CommentVO
 	for _, comment := range comments {
-		commentVO := CommentVO{Id: comment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: comment.CreatedAt.UnixMilli(), EthAddr: comment.EthAddr, Comment: comment.Comment}
+		var user UserProfile
+		model.DB.Model(&UserProfile{}).Where("eth_addr = ?", comment.EthAddr).First(&user)
+		commentVO := CommentVO{Id: comment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: comment.CreatedAt.UnixMilli(), EthAddr: comment.EthAddr, Comment: comment.Comment, UserName: user.Username, Avatar: user.Avatar,
+			Editable: comment.EthAddr == address}
 
 		childrenIds := strings.Split(comment.Children, ",")
 		var subComments []FileComment
 		model.DB.Order("id desc").Where("id in ?", childrenIds).Find(&subComments)
 
 		for _, subComment := range subComments {
-			subCommentVO := SubCommentVO{Id: subComment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: subComment.CreatedAt.UnixMilli(), EthAddr: subComment.EthAddr, Comment: subComment.Comment}
+			var subCommentUser UserProfile
+			model.DB.Model(&UserProfile{}).Where("eth_addr = ?", comment.EthAddr).First(&subCommentUser)
+			subCommentVO := SubCommentVO{Id: subComment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: subComment.CreatedAt.UnixMilli(), EthAddr: subComment.EthAddr, Comment: subComment.Comment, UserName: subCommentUser.Username, Avatar: subCommentUser.Avatar,
+				Editable: comment.EthAddr == address}
 			commentVO.SubComments = append(commentVO.SubComments, subCommentVO)
 		}
 
@@ -110,11 +120,10 @@ func (model *Model) GetFileComment(fileId uint) (*[]CommentVO, error) {
 	return &result, nil
 }
 
-
 func (model *Model) LikeFileComment(ethAddress string, commentId uint) error {
 	commentLike := FileCommentLike{
 		CommentId: commentId,
-		EthAddr:      ethAddress,
+		EthAddr:   ethAddress,
 	}
 	err := model.DB.Transaction(func(tx *gorm.DB) error {
 		var count int64
