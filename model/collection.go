@@ -119,8 +119,7 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 	} else if ethAddr != "" {
 		model.DB.Where("eth_addr = ?", ethAddr).Find(&collections)
 	} else if fileID > 0 {
-		var collectionFiles []CollectionFile
-		model.DB.Where("file_id = ?", fileID).Find(&collectionFiles)
+		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ?", fileID).Find(&collections)
 	}
 
 	var result []CollectionVO
