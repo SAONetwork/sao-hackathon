@@ -58,7 +58,7 @@ func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.Han
 		hackathon.DELETE("/collectionStar", s.DeleteStarCollection)
 
 		hackathon.POST("/comment/file", s.AddFileComment)
-		hackathon.DELETE("/comment/file", s.DeleteFileComment)
+		hackathon.DELETE("/comment/file/:commentId", s.DeleteFileComment)
 		hackathon.POST("/comment/like", s.LikeFileComment)
 		hackathon.DELETE("/comment/like", s.UnLikeFileComment)
 	}
