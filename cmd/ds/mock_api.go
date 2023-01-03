@@ -186,6 +186,9 @@ func DeleteFileComment(ctx *gin.Context) {
 // @Tags Comment
 // @Title GetFileComments
 // @Description get file comments
+// @Param address header string false "user's ethereum address"
+// @Param signaturemessage header string false "user's ethereum signaturemessage"
+// @Param signature header string false "user's ethereum signature"
 // @Param	fileId		query 	string	false		"The file id for query"
 // @router /comment/file [get]
 func GetFileComments(ctx *gin.Context) {

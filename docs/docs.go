@@ -376,6 +376,24 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
                         "description": "The file id for query",
                         "name": "fileId",
                         "in": "query"
