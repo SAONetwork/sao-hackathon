@@ -33,7 +33,7 @@ type CommentVO struct {
 	Avatar      string
 	Comment     string
 	TotalLikes    int64
-	ParentComment ParentCommentVO
+	ParentComment *ParentCommentVO
 }
 
 type ParentCommentVO struct {
@@ -112,13 +112,13 @@ func (model *Model) GetFileComment(fileId uint, address string) (*[]CommentVO, e
 
 		if comment.ParentId > 0 {
 			var parentComment FileComment
-			model.DB.Order("id desc").Where("id =", comment.ParentId).Find(&parentComment)
+			model.DB.Where("id = ?", comment.ParentId).Find(&parentComment)
 
 			var subCommentUser UserProfile
 			model.DB.Model(&UserProfile{}).Where("eth_addr = ?", comment.EthAddr).First(&subCommentUser)
 			parentCommentVO := ParentCommentVO{Id: parentComment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: parentComment.CreatedAt.UnixMilli(), EthAddr: parentComment.EthAddr, Comment: parentComment.Comment, UserName: subCommentUser.Username, Avatar: subCommentUser.Avatar,
 				Editable: comment.EthAddr == address}
-			commentVO.ParentComment = parentCommentVO
+			commentVO.ParentComment = &parentCommentVO
 		}
 
 		result = append(result, commentVO)
