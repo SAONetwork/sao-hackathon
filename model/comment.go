@@ -48,7 +48,7 @@ type SubCommentVO struct {
 	TotalLikes int64
 }
 
-func (model *Model) AddFileComment(comment *FileComment) error {
+func (model *Model) AddFileComment(comment *FileComment) (*CommentVO, error) {
 	err := model.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&FileComment{}).Create(&comment).Error; err != nil {
 			return err
@@ -68,7 +68,14 @@ func (model *Model) AddFileComment(comment *FileComment) error {
 		}
 		return nil
 	})
-	return err
+	if err != nil {
+		return nil, err
+	}
+	var user UserProfile
+	model.DB.Model(&UserProfile{}).Where("eth_addr = ?", comment.EthAddr).First(&user)
+	commentVO := CommentVO{Id: comment.Id, ObjectId: strconv.FormatUint(uint64(comment.FileId), 10), DateTime: comment.CreatedAt.UnixMilli(), EthAddr: comment.EthAddr, Comment: comment.Comment, UserName: user.Username, Avatar: user.Avatar,
+		Editable: true}
+	return &commentVO, nil
 }
 
 func (model *Model) DeleteFileComment(commentId uint) error {

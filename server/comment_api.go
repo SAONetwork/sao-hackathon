@@ -25,12 +25,12 @@ func (s *Server) AddFileComment(ctx *gin.Context) {
 	}
 	comment.EthAddr = ethAddress
 
-	err = s.Model.AddFileComment(&comment)
+	result, err := s.Model.AddFileComment(&comment)
 	if err != nil {
 		api.ServerError(ctx, "createCollection.error", err.Error())
 		return
 	}
-	api.Success(ctx, comment)
+	api.Success(ctx, result)
 }
 
 func (s *Server) DeleteFileComment(ctx *gin.Context) {
