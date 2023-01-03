@@ -32,11 +32,11 @@ type CommentVO struct {
 	Editable    bool
 	Avatar      string
 	Comment     string
-	TotalLikes  int64
-	SubComments []SubCommentVO
+	TotalLikes    int64
+	ParentComment ParentCommentVO
 }
 
-type SubCommentVO struct {
+type ParentCommentVO struct {
 	Id         uint
 	ObjectId   string
 	DateTime   int64
@@ -101,7 +101,7 @@ func (model *Model) DeleteFileComment(commentId uint) error {
 
 func (model *Model) GetFileComment(fileId uint, address string) (*[]CommentVO, error) {
 	var comments []FileComment
-	model.DB.Order("id desc").Where("file_id = ? and parent_id = 0", fileId).Find(&comments)
+	model.DB.Order("id desc").Where("file_id = ?", fileId).Find(&comments)
 
 	var result []CommentVO
 	for _, comment := range comments {
@@ -110,16 +110,15 @@ func (model *Model) GetFileComment(fileId uint, address string) (*[]CommentVO, e
 		commentVO := CommentVO{Id: comment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: comment.CreatedAt.UnixMilli(), EthAddr: comment.EthAddr, Comment: comment.Comment, UserName: user.Username, Avatar: user.Avatar,
 			Editable: comment.EthAddr == address}
 
-		childrenIds := strings.Split(comment.Children, ",")
-		var subComments []FileComment
-		model.DB.Order("id desc").Where("id in ?", childrenIds).Find(&subComments)
+		if comment.ParentId > 0 {
+			var parentComment FileComment
+			model.DB.Order("id desc").Where("id =", comment.ParentId).Find(&parentComment)
 
-		for _, subComment := range subComments {
 			var subCommentUser UserProfile
 			model.DB.Model(&UserProfile{}).Where("eth_addr = ?", comment.EthAddr).First(&subCommentUser)
-			subCommentVO := SubCommentVO{Id: subComment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: subComment.CreatedAt.UnixMilli(), EthAddr: subComment.EthAddr, Comment: subComment.Comment, UserName: subCommentUser.Username, Avatar: subCommentUser.Avatar,
+			parentCommentVO := ParentCommentVO{Id: parentComment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: parentComment.CreatedAt.UnixMilli(), EthAddr: parentComment.EthAddr, Comment: parentComment.Comment, UserName: subCommentUser.Username, Avatar: subCommentUser.Avatar,
 				Editable: comment.EthAddr == address}
-			commentVO.SubComments = append(commentVO.SubComments, subCommentVO)
+			commentVO.ParentComment = parentCommentVO
 		}
 
 		result = append(result, commentVO)
