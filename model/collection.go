@@ -102,6 +102,10 @@ func (model *Model) GetSearchCollectionResult(key string) (*[]Collection, error)
 	var collections []Collection
 	bindKey := "%" + key + "%"
 	model.DB.Where("(title like ? or labels like ? or `description` like ?) and type = 0", bindKey, bindKey, bindKey).Find(&collections)
+
+	for _, c := range collections {
+		c.Preview = fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview)
+	}
 	return &collections, nil
 }
 
@@ -119,7 +123,7 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 	} else if ethAddr != "" {
 		model.DB.Where("eth_addr = ?", ethAddr).Find(&collections)
 	} else if fileID > 0 {
-		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ?", fileID).Find(&collections)
+		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and （type = 0 or (type = 1 and eth_addr = ?))", fileID, address).Find(&collections)
 	}
 
 	var result []CollectionVO

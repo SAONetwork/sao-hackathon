@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sao-datastore-storage/model"
+	"sao-datastore-storage/util"
 	"sao-datastore-storage/util/api"
 	"strconv"
 
@@ -46,18 +47,98 @@ func (s *Server) UpdateUserProfile(ctx *gin.Context) {
 }
 
 func (s *Server) GetUserProfile(ctx *gin.Context) {
-	ethAddress, _ := ctx.Get("User")
-	if ethAddress.(string) == "" {
+	ethAddress := ctx.GetHeader("address")
+	util.VerifySignature(ctx)
+	owner, _ := ctx.Get("User")
+	if ethAddress != "" && owner.(string) == "" {
 		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
 		return
 	}
-	profile, err := s.Model.GetUserProfile(ethAddress.(string))
+
+	userAddress,got := ctx.GetQuery("address")
+	if !got {
+		userAddress = ethAddress
+	}
+	if userAddress == "" {
+		api.BadRequest(ctx, "invalid.param", "")
+		return
+	}
+	profile, err := s.Model.GetUserProfile(userAddress, ethAddress)
 	if err != nil {
 		log.Error(err)
 		api.ServerError(ctx, "error.get.userprofile", "database error")
 		return
 	}
 	api.Success(ctx, profile)
+}
+
+func (s *Server) FollowUser(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+	following := ctx.Param("address")
+	err := s.Model.FollowUser(ethAddress.(string), following)
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "error.followuser", "database error")
+		return
+	}
+	api.Success(ctx, true)
+}
+
+func (s *Server) GetUserFollowers(ctx *gin.Context) {
+	ethAddress := ctx.GetHeader("address")
+	util.VerifySignature(ctx)
+	owner, _ := ctx.Get("User")
+	if ethAddress != "" && owner.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	userAddress,got := ctx.GetQuery("address")
+	if !got {
+		userAddress = ethAddress
+	}
+	if userAddress == "" {
+		api.BadRequest(ctx, "invalid.param", "")
+		return
+	}
+	followers, err := s.Model.GetUserFollowers(userAddress)
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "error.get.userfollowers", "database error")
+		return
+	}
+	api.Success(ctx, followers)
+}
+
+func (s *Server) GetUserFollowings(ctx *gin.Context) {
+	ethAddress := ctx.GetHeader("address")
+	util.VerifySignature(ctx)
+	owner, _ := ctx.Get("User")
+	if ethAddress != "" && owner.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	userAddress,got := ctx.GetQuery("address")
+	if !got {
+		userAddress = ethAddress
+	}
+	if userAddress == "" {
+		api.BadRequest(ctx, "invalid.param", "")
+		return
+	}
+
+	followings, err := s.Model.GetUserFollowings(userAddress)
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "error.get.userfollowers", "database error")
+		return
+	}
+	api.Success(ctx, followings)
 }
 
 func (s *Server) GetUserDashboard(ctx *gin.Context) {

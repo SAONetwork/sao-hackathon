@@ -111,6 +111,10 @@ var initCmd = &cli.Command{
 		if err = db.AutoMigrate(&model.UserProfile{}); err != nil {
 			return err
 		}
+		if err = db.AutoMigrate(&model.UserFollowing{}); err != nil {
+			return err
+		}
+
 		if err = db.AutoMigrate(&model.FileChunkMetadata{}); err != nil {
 			return err
 		}

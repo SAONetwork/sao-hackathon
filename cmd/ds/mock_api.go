@@ -215,3 +215,47 @@ func LikeFileComment(ctx *gin.Context) {
 // @router /comment/like [delete]
 func UnLikeFileComment(ctx *gin.Context) {
 }
+
+// @Tags User
+// @Title GetUserProfile
+// @Description get user followers
+// @Param address header string false "user's ethereum address"
+// @Param signaturemessage header string false "user's ethereum signaturemessage"
+// @Param signature header string false "user's ethereum signature"
+// @Param	address		query 	string	false		"user's ethereum address"
+// @router /user [get]
+func GetUserProfile(ctx *gin.Context) {
+}
+
+// @Tags User
+// @Title GetUserFollowings
+// @Description get user followings
+// @Param address header string false "user's ethereum address"
+// @Param signaturemessage header string false "user's ethereum signaturemessage"
+// @Param signature header string false "user's ethereum signature"
+// @Param	address		query 	string	false		"user's ethereum address"
+// @router /user/followings [get]
+func GetUserFollowings(ctx *gin.Context) {
+}
+
+// @Tags User
+// @Title GetUserFollowers
+// @Description get user followers
+// @Param address header string false "user's ethereum address"
+// @Param signaturemessage header string false "user's ethereum signaturemessage"
+// @Param signature header string false "user's ethereum signature"
+// @Param	address		query 	string	false		"user's ethereum address"
+// @router /user/followers [get]
+func GetUserFollowers(ctx *gin.Context) {
+}
+
+// @Tags User
+// @Title FollowUser
+// @Description follow a user
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	address		path 	string	false		"the ethereum address of the user who you want to follow"
+// @router /user/follow/{address} [post]
+func FollowUser(ctx *gin.Context) {
+}
