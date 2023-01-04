@@ -98,15 +98,27 @@ func (model *Model) DeleteCollection(collectionId uint) error {
 	return err
 }
 
-func (model *Model) GetSearchCollectionResult(key string) (*[]Collection, error) {
+func (model *Model) GetSearchCollectionResult(key string) (*[]CollectionVO, error) {
 	var collections []Collection
 	bindKey := "%" + key + "%"
 	model.DB.Where("(title like ? or labels like ? or `description` like ?) and type = 0", bindKey, bindKey, bindKey).Find(&collections)
 
+	var result []CollectionVO
 	for _, c := range collections {
-		c.Preview = fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview)
+		result = append(result, CollectionVO{
+			Id:           c.Id,
+			CreatedAt:    c.CreatedAt.UnixMilli(),
+			UpdatedAt:    c.UpdatedAt.UnixMilli(),
+			EthAddr:      c.EthAddr,
+			Preview:      fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview),
+			Title:        c.Title,
+			Labels:       c.Labels,
+			Description:  c.Description,
+			Type:         c.Type,
+			MaxFiles:     100,
+		})
 	}
-	return &collections, nil
+	return &result, nil
 }
 
 func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint, address string) (*[]CollectionVO, error) {
