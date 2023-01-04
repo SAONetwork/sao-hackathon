@@ -21,6 +21,13 @@ type UserFollowing struct {
 	Following string
 }
 
+type UserBasicProfileVO struct {
+	Id               uint
+	EthAddr          string
+	Avatar           string
+	Username         string
+}
+
 type UserProfileVO struct {
 	Id               uint
 	EthAddr          string
@@ -109,17 +116,17 @@ func (model *Model) FollowUser(follower string, following string) error {
 	return err
 }
 
-func (model *Model) GetUserFollowers(address string) (*[]UserProfileVO, error) {
+func (model *Model) GetUserFollowers(address string) (*[]UserBasicProfileVO, error) {
 	var userFollowers []UserFollowing
 	err := model.DB.Model(&UserFollowing{}).Where(&UserFollowing{Following: address}).Find(&userFollowers).Error
 	if err != nil {
 		return nil, err
 	}
-	var result []UserProfileVO
+	var result []UserBasicProfileVO
 	for _, follower := range userFollowers {
 		var user UserProfile
 		model.DB.Where(&UserProfile{EthAddr: follower.Follower}).First(&user)
-		result = append(result, UserProfileVO{
+		result = append(result, UserBasicProfileVO{
 			Id:       user.Id,
 			EthAddr:  user.EthAddr,
 			Username: user.Username,
@@ -129,17 +136,17 @@ func (model *Model) GetUserFollowers(address string) (*[]UserProfileVO, error) {
 	return &result, nil
 }
 
-func (model *Model) GetUserFollowings(address string) (*[]UserProfileVO, error) {
+func (model *Model) GetUserFollowings(address string) (*[]UserBasicProfileVO, error) {
 	var userFollowings []UserFollowing
 	err := model.DB.Model(&UserFollowing{}).Where(&UserFollowing{Follower: address}).Find(&userFollowings).Error
 	if err != nil {
 		return nil, err
 	}
-	var result []UserProfileVO
+	var result []UserBasicProfileVO
 	for _, following := range userFollowings {
 		var user UserProfile
 		model.DB.Where(&UserProfile{EthAddr: following.Following}).First(&user)
-		result = append(result, UserProfileVO{
+		result = append(result, UserBasicProfileVO{
 			Id:       user.Id,
 			EthAddr:  user.EthAddr,
 			Username: user.Username,
