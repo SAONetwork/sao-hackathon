@@ -119,7 +119,7 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 	}
 
 	var TotalComments int64
-	model.DB.Model(&FileComment{}).Where("file_id = ? ", filePreview.Id).Count(&TotalComments)
+	model.DB.Model(&FileComment{}).Where("status <> 2 and file_id = ? ", filePreview.Id).Count(&TotalComments)
 
 	var TotalCollections int64
 	model.DB.Model(&CollectionFile{}).Where("file_id = ? ", filePreview.Id).Count(&TotalCollections)
