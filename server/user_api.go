@@ -196,7 +196,7 @@ func (s *Server) GetUserDashboard(ctx *gin.Context) {
 
 	dashboard, err := s.Model.GetUserDashboard(l, o, userAddress, func(preview string) string {
 		return fmt.Sprintf("%s/previews/%s", s.Config.Host, preview)
-	})
+	}, ethAddress)
 	if err != nil {
 		log.Error(err)
 		api.ServerError(ctx, "error.get.userdashboard", "database error")
@@ -244,7 +244,7 @@ func (s *Server) GetUserPurchases(ctx *gin.Context) {
 
 	dashboard, err := s.Model.GetUserPurchases(l, o, userAddress, func(preview string) string {
 		return fmt.Sprintf("%s/previews/%s", s.Config.Host, preview)
-	})
+	}, ethAddress)
 	if err != nil {
 		log.Error(err)
 		api.ServerError(ctx, "error.get.userpurchases", "database error")

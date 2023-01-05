@@ -274,7 +274,7 @@ func (model *Model) GetUserSummary(ethAddr string) (*UserSummary, error) {
 	return &userSummary, nil
 }
 
-func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, previewPath func(string) string) (*UserDashboard, error) {
+func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, previewPath func(string) string, selfAddress string) (*UserDashboard, error) {
 	dashboard := UserDashboard{}
 
 	// recent uploads
@@ -291,6 +291,15 @@ func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, prev
 		if fileExtension != "" {
 			fileExtension = fileExtension[1:]
 		}
+
+		paid := true
+		if upload.Price.Cmp(decimal.NewFromInt(0))> 0 && ethAddr != selfAddress {
+			purchaseOrder := model.GetPurchaseOrder(upload.Id, selfAddress)
+			if purchaseOrder.FileId == 0 {
+				paid = false
+			}
+		}
+
 		fileInfoInMarket = append(fileInfoInMarket, FileInfoInMarket{Id: upload.Id,
 			CreatedAt:      upload.CreatedAt,
 			UpdatedAt:      upload.UpdatedAt,
@@ -307,7 +316,7 @@ func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, prev
 			FileCategory:   upload.FileCategory,
 			AdditionalInfo: upload.AdditionalInfo,
 			FileExtension:  fileExtension,
-			AlreadyPaid:    true})
+			AlreadyPaid:    paid})
 	}
 	dashboard.RecentUploads = fileInfoInMarket
 
@@ -322,7 +331,7 @@ func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, prev
 	return &dashboard, nil
 }
 
-func (model *Model) GetUserPurchases(limit int, offset int, ethAddr string, previewPath func(string) string) (*UserPurchases, error) {
+func (model *Model) GetUserPurchases(limit int, offset int, ethAddr string, previewPath func(string) string, selfAddress string) (*UserPurchases, error) {
 	purchases := UserPurchases{}
 
 	// recent uploads
@@ -334,6 +343,14 @@ func (model *Model) GetUserPurchases(limit int, offset int, ethAddr string, prev
 
 	var fileInfoInMarket []FileInfoInMarket
 	for _, upload := range uploads {
+		paid := true
+		if upload.Price.Cmp(decimal.NewFromInt(0))> 0 && ethAddr != selfAddress {
+			purchaseOrder := model.GetPurchaseOrder(upload.Id, selfAddress)
+			if purchaseOrder.FileId == 0 {
+				paid = false
+			}
+		}
+
 		fileInfoInMarket = append(fileInfoInMarket, FileInfoInMarket{Id: upload.Id,
 			CreatedAt:      upload.CreatedAt,
 			UpdatedAt:      upload.UpdatedAt,
@@ -349,7 +366,7 @@ func (model *Model) GetUserPurchases(limit int, offset int, ethAddr string, prev
 			NftTokenId:     upload.NftTokenId,
 			FileCategory:   upload.FileCategory,
 			AdditionalInfo: upload.AdditionalInfo,
-			AlreadyPaid:    true})
+			AlreadyPaid:    paid})
 	}
 	purchases.Purchases = fileInfoInMarket
 

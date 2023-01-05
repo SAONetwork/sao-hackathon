@@ -104,7 +104,26 @@ func (s *Server) GetCollection(ctx *gin.Context) {
 
 	owner, _ := ctx.GetQuery("owner")
 
-	collections, err := s.Model.GetCollection(uint(collectionId), owner, uint(fileId), ethAddress)
+	offset, got := ctx.GetQuery("offset")
+	if !got {
+		offset = "0"
+	}
+	o, err := strconv.Atoi(offset)
+	if err != nil {
+		log.Info(err)
+		o = 0
+	}
+	limit, got := ctx.GetQuery("limit")
+	if !got {
+		limit = "10"
+	}
+	l, err := strconv.Atoi(limit)
+	if err != nil {
+		log.Info(err)
+		l = 10
+	}
+
+	collections, err := s.Model.GetCollection(uint(collectionId), owner, uint(fileId), ethAddress, o, l)
 	if err != nil {
 		log.Error(err)
 	}

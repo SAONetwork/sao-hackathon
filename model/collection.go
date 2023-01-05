@@ -121,7 +121,7 @@ func (model *Model) GetSearchCollectionResult(key string) (*[]CollectionVO, erro
 	return &result, nil
 }
 
-func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint, address string) (*[]CollectionVO, error) {
+func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint, address string, offset int, limit int) (*[]CollectionVO, error) {
 	var collections []Collection
 	if collectionId > 0 {
 		var collection Collection
@@ -131,11 +131,11 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 		}
 		collections = append(collections, collection)
 	} else if ethAddr != "" && fileID > 0 {
-		model.DB.Where("eth_addr = ?", ethAddr).Find(&collections)
+		model.DB.Where("eth_addr = ?", ethAddr).Limit(limit).Offset(offset).Find(&collections)
 	} else if ethAddr != "" {
-		model.DB.Where("eth_addr = ?", ethAddr).Find(&collections)
+		model.DB.Where("eth_addr = ?", ethAddr).Limit(limit).Offset(offset).Find(&collections)
 	} else if fileID > 0 {
-		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and （type = 0 or (type = 1 and eth_addr = ?))", fileID, address).Find(&collections)
+		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and （type = 0 or (type = 1 and eth_addr = ?))", fileID, address).Limit(limit).Offset(offset).Find(&collections)
 	}
 
 	var result []CollectionVO

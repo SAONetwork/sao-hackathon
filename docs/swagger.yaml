@@ -55,6 +55,14 @@ paths:
         in: query
         name: owner
         type: string
+      - description: offset default 0
+        in: query
+        name: offset
+        type: string
+      - description: limit default 10
+        in: query
+        name: limit
+        type: string
       responses: {}
       tags:
       - Collection

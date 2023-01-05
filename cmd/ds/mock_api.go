@@ -30,6 +30,8 @@ type MockFileComment struct {
 // @Param	collectionId		query 	string	false		"The collection id for query"
 // @Param	fileId		query 	string	false		"The file id for query"
 // @Param	owner		query 	string	false		"The owner for query"
+// @Param	offset		query 	string	false		"offset default 0"
+// @Param	limit		query 	string	false		"limit default 10"
 // @router /collection [get]
 func GetCollection(ctx *gin.Context) {
 }

@@ -40,6 +40,18 @@ const docTemplate = `{
                         "description": "The owner for query",
                         "name": "owner",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "offset default 0",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "limit default 10",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {}
