@@ -158,9 +158,20 @@ func (s *Server) GetUserFollowings(ctx *gin.Context) {
 }
 
 func (s *Server) GetUserDashboard(ctx *gin.Context) {
-	ethAddress, _ := ctx.Get("User")
-	if ethAddress.(string) == "" {
+	ethAddress := ctx.GetHeader("address")
+	util.VerifySignature(ctx)
+	owner, _ := ctx.Get("User")
+	if ethAddress != "" && owner.(string) == "" {
 		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	userAddress,got := ctx.GetQuery("address")
+	if !got {
+		userAddress = ethAddress
+	}
+	if userAddress == "" {
+		api.BadRequest(ctx, "invalid.param", "")
 		return
 	}
 
@@ -183,7 +194,7 @@ func (s *Server) GetUserDashboard(ctx *gin.Context) {
 		l = 10
 	}
 
-	dashboard, err := s.Model.GetUserDashboard(l, o, ethAddress.(string), func(preview string) string {
+	dashboard, err := s.Model.GetUserDashboard(l, o, userAddress, func(preview string) string {
 		return fmt.Sprintf("%s/previews/%s", s.Config.Host, preview)
 	})
 	if err != nil {
@@ -195,9 +206,20 @@ func (s *Server) GetUserDashboard(ctx *gin.Context) {
 }
 
 func (s *Server) GetUserPurchases(ctx *gin.Context) {
-	ethAddress, _ := ctx.Get("User")
-	if ethAddress.(string) == "" {
+	ethAddress := ctx.GetHeader("address")
+	util.VerifySignature(ctx)
+	owner, _ := ctx.Get("User")
+	if ethAddress != "" && owner.(string) == "" {
 		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	userAddress,got := ctx.GetQuery("address")
+	if !got {
+		userAddress = ethAddress
+	}
+	if userAddress == "" {
+		api.BadRequest(ctx, "invalid.param", "")
 		return
 	}
 
@@ -220,7 +242,7 @@ func (s *Server) GetUserPurchases(ctx *gin.Context) {
 		l = 10
 	}
 
-	dashboard, err := s.Model.GetUserPurchases(l, o, ethAddress.(string), func(preview string) string {
+	dashboard, err := s.Model.GetUserPurchases(l, o, userAddress, func(preview string) string {
 		return fmt.Sprintf("%s/previews/%s", s.Config.Host, preview)
 	})
 	if err != nil {

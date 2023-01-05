@@ -41,8 +41,6 @@ func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.Han
 		hackathon.DELETE("/fileStar", s.DeleteStarFile)
 
 		hackathon.POST("/user", s.UpdateUserProfile)
-		hackathon.GET("/user/purchases", s.GetUserPurchases)
-		hackathon.GET("/user/dashboard", s.GetUserDashboard)
 		hackathon.GET("/user/summary", s.GetUserSummary)
 		hackathon.POST("/user/follow/:address", s.FollowUser)
 		hackathon.DELETE("/user/follow/:address", s.UnFollowUser)
@@ -67,6 +65,8 @@ func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.Han
 	noSignature := r.Group(contextPath + "/api/v1")
 	{
 		noSignature.GET("/user", s.GetUserProfile)
+		noSignature.GET("/user/purchases", s.GetUserPurchases)
+		noSignature.GET("/user/dashboard", s.GetUserDashboard)
 		noSignature.GET("/user/followings", s.GetUserFollowings)
 		noSignature.GET("/user/followers", s.GetUserFollowers)
 		noSignature.GET("/fileInfos", s.FileInfos)
