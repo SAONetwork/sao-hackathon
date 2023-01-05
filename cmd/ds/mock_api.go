@@ -259,3 +259,14 @@ func GetUserFollowers(ctx *gin.Context) {
 // @router /user/follow/{address} [post]
 func FollowUser(ctx *gin.Context) {
 }
+
+// @Tags User
+// @Title UnFollowUser
+// @Description cancel following of a user
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	address		path 	string	false		"the ethereum address of the user who you want to unfollow"
+// @router /user/follow/{address} [delete]
+func UnFollowUser(ctx *gin.Context) {
+}

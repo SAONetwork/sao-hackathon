@@ -512,6 +512,31 @@ paths:
       tags:
       - User
   /user/follow/{address}:
+    delete:
+      description: cancel following of a user
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: the ethereum address of the user who you want to unfollow
+        in: path
+        name: address
+        type: string
+      responses: {}
+      tags:
+      - User
     post:
       description: follow a user
       parameters:

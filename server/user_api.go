@@ -88,6 +88,22 @@ func (s *Server) FollowUser(ctx *gin.Context) {
 	api.Success(ctx, true)
 }
 
+func (s *Server) UnFollowUser(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+	following := ctx.Param("address")
+	err := s.Model.UnFollowUser(ethAddress.(string), following)
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "error.unfollowuser", "database error")
+		return
+	}
+	api.Success(ctx, true)
+}
+
 func (s *Server) GetUserFollowers(ctx *gin.Context) {
 	ethAddress := ctx.GetHeader("address")
 	util.VerifySignature(ctx)

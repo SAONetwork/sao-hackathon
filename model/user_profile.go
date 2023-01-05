@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"github.com/shopspring/decimal"
 	"golang.org/x/xerrors"
@@ -111,6 +112,23 @@ func (model *Model) FollowUser(follower string, following string) error {
 				return err
 			}
 		}
+		return nil
+	})
+	return err
+}
+
+func (model *Model) UnFollowUser(follower string, following string) error {
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		var count int64
+		tx.Model(&UserFollowing{}).Where("follower = ? and following = ? ", follower, following).Count(&count)
+		if count <= 0 {
+			return errors.New("the user" + follower + " haven't followed yet:" + following)
+		}
+
+		if err := tx.Where("follower = ? and following = ? ", follower, following).Delete(&UserFollowing{}).Error; err != nil {
+			return err
+		}
+
 		return nil
 	})
 	return err
