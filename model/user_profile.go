@@ -298,6 +298,8 @@ func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, prev
 			if purchaseOrder.FileId == 0 {
 				paid = false
 			}
+		} else if upload.Price.Cmp(decimal.NewFromInt(0)) == 0 {
+			paid = false
 		}
 
 		fileInfoInMarket = append(fileInfoInMarket, FileInfoInMarket{Id: upload.Id,
