@@ -75,6 +75,50 @@ func (s *Server) DeleteCollection(ctx *gin.Context) {
 	api.Success(ctx, true)
 }
 
+func (s *Server) GetLikedCollection(ctx *gin.Context) {
+	ethAddress := ctx.GetHeader("address")
+	util.VerifySignature(ctx)
+	user, _ := ctx.Get("User")
+	if ethAddress != "" && user.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	userAddress, got := ctx.GetQuery("address")
+	if !got {
+		userAddress = ethAddress
+	}
+	if userAddress == "" {
+		api.BadRequest(ctx, "invalid.param", "")
+		return
+	}
+
+	offset, got := ctx.GetQuery("offset")
+	if !got {
+		offset = "0"
+	}
+	o, err := strconv.Atoi(offset)
+	if err != nil {
+		log.Info(err)
+		o = 0
+	}
+	limit, got := ctx.GetQuery("limit")
+	if !got {
+		limit = "10"
+	}
+	l, err := strconv.Atoi(limit)
+	if err != nil {
+		log.Info(err)
+		l = 10
+	}
+
+	collections, err := s.Model.GetLikedCollection(userAddress, o, l)
+	if err != nil {
+		log.Error(err)
+	}
+	api.Success(ctx, collections)
+}
+
 func (s *Server) GetCollection(ctx *gin.Context) {
 	ethAddress := ctx.GetHeader("address")
 	util.VerifySignature(ctx)

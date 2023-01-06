@@ -61,6 +61,19 @@ func FileInfosByCollectionId(ctx *gin.Context) {
 }
 
 // @Tags Collection
+// @Title GetLikedCollection
+// @Description get liked collections
+// @Param address header string false "user's ethereum address"
+// @Param signaturemessage header string false "user's ethereum signaturemessage"
+// @Param signature header string false "user's ethereum signature"
+// @Param	address		query 	string	true		"user's ethereum address, by default header's address"
+// @Param	offset		query 	string	false		"offset default 0"
+// @Param	limit		query 	string	false		"limit default 10"
+// @router /collection/liked [get]
+func GetLikedCollection(ctx *gin.Context) {
+}
+
+// @Tags Collection
 // @Title CreateCollection
 // @Description create collection
 // @Param address header string true "user's ethereum address"

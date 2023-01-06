@@ -73,6 +73,7 @@ func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.Han
 		noSignature.GET("/file/:fileId", s.FileInfo)
 		noSignature.GET("/search", s.GeneralSearch)
 		noSignature.GET("/collection/fileInfos", s.FileInfosByCollectionId)
+		noSignature.GET("/collection/liked", s.GetLikedCollection)
 		noSignature.GET("/comment/file", s.GetFileComments)
 	}
 

@@ -63,6 +63,11 @@ type CollectionVO struct {
 	FileIncluded bool
 }
 
+type CollectionResponse struct {
+	Collections []CollectionVO
+	Count       int64
+}
+
 func (model *Model) CreateCollection(collection *Collection) error {
 	return model.DB.Create(collection).Error
 }
@@ -106,23 +111,24 @@ func (model *Model) GetSearchCollectionResult(key string) (*[]CollectionVO, erro
 	var result []CollectionVO
 	for _, c := range collections {
 		result = append(result, CollectionVO{
-			Id:           c.Id,
-			CreatedAt:    c.CreatedAt.UnixMilli(),
-			UpdatedAt:    c.UpdatedAt.UnixMilli(),
-			EthAddr:      c.EthAddr,
-			Preview:      fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview),
-			Title:        c.Title,
-			Labels:       c.Labels,
-			Description:  c.Description,
-			Type:         c.Type,
-			MaxFiles:     100,
+			Id:          c.Id,
+			CreatedAt:   c.CreatedAt.UnixMilli(),
+			UpdatedAt:   c.UpdatedAt.UnixMilli(),
+			EthAddr:     c.EthAddr,
+			Preview:     fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview),
+			Title:       c.Title,
+			Labels:      c.Labels,
+			Description: c.Description,
+			Type:        c.Type,
+			MaxFiles:    100,
 		})
 	}
 	return &result, nil
 }
 
-func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint, address string, offset int, limit int) (*[]CollectionVO, error) {
+func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint, address string, offset int, limit int) (*CollectionResponse, error) {
 	var collections []Collection
+	var totalCollections int64
 	if collectionId > 0 {
 		var collection Collection
 		result := model.DB.First(&collection, collectionId)
@@ -130,15 +136,19 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 			return nil, result.Error
 		}
 		collections = append(collections, collection)
+		totalCollections = 1
 	} else if ethAddr != "" && fileID > 0 {
 		model.DB.Where("eth_addr = ?", ethAddr).Limit(limit).Offset(offset).Find(&collections)
+		model.DB.Where("eth_addr = ?", ethAddr).Count(&totalCollections)
 	} else if ethAddr != "" {
 		model.DB.Where("eth_addr = ?", ethAddr).Limit(limit).Offset(offset).Find(&collections)
+		model.DB.Where("eth_addr = ?", ethAddr).Count(&totalCollections)
 	} else if fileID > 0 {
-		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?))", fileID, address).Limit(limit).Offset(offset).Find(&collections)
+		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?)) limit ? offset ?", fileID, address, limit, offset).Find(&collections)
+		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?))", fileID, address).Count(&totalCollections)
 	}
 
-	var result []CollectionVO
+	var collectionVOS []CollectionVO
 	for _, c := range collections {
 		var totalFiles int64
 		model.DB.Model(&CollectionFile{}).Where("collection_id = ? ", c.Id).Count(&totalFiles)
@@ -163,7 +173,7 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 				liked = true
 			}
 		}
-		result = append(result, CollectionVO{
+		collectionVOS = append(collectionVOS, CollectionVO{
 			Id:           c.Id,
 			CreatedAt:    c.CreatedAt.UnixMilli(),
 			UpdatedAt:    c.UpdatedAt.UnixMilli(),
@@ -180,6 +190,52 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 			Liked:        liked,
 		})
 	}
+
+	result := CollectionResponse{
+		Collections: collectionVOS,
+		Count:       totalCollections,
+	}
+
+	return &result, nil
+}
+
+func (model *Model) GetLikedCollection(ethAddr string, offset int, limit int) (*CollectionResponse, error) {
+	var collections []Collection
+	var totalCollections int64
+
+	model.DB.Raw("select c.* from collections c inner join collection_likes l on c.id = l.collection_id where l.deleted_at is null and c.deleted_at is null and l.eth_addr = ? limit ? offset ?", ethAddr, limit, offset).Find(&collections)
+	model.DB.Raw("select c.* from collections c inner join collection_likes l on c.id = l.collection_id where l.deleted_at is null and c.deleted_at is null and l.eth_addr = ?", ethAddr).Count(&totalCollections)
+
+	var collectionVOS []CollectionVO
+	for _, c := range collections {
+		var totalFiles int64
+		model.DB.Model(&CollectionFile{}).Where("collection_id = ? ", c.Id).Count(&totalFiles)
+
+		fileIncluded := false
+		liked := false
+		collectionVOS = append(collectionVOS, CollectionVO{
+			Id:           c.Id,
+			CreatedAt:    c.CreatedAt.UnixMilli(),
+			UpdatedAt:    c.UpdatedAt.UnixMilli(),
+			EthAddr:      c.EthAddr,
+			Preview:      fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview),
+			Title:        c.Title,
+			Labels:       c.Labels,
+			Description:  c.Description,
+			Type:         c.Type,
+			TotalFiles:   totalFiles,
+			MaxFiles:     100,
+			FileIncluded: fileIncluded,
+			TotalLikes:   0,
+			Liked:        liked,
+		})
+	}
+
+	result := CollectionResponse{
+		Collections: collectionVOS,
+		Count:       totalCollections,
+	}
+
 	return &result, nil
 }
 

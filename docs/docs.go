@@ -144,6 +144,54 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/collection/liked": {
+            "get": {
+                "description": "get liked collections",
+                "tags": [
+                    "Collection"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address, by default header's address",
+                        "name": "address",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "offset default 0",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "limit default 10",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/collection/recommendedTags": {
             "post": {
                 "description": "get recommended tags for collection",
