@@ -146,14 +146,7 @@ func (s *Server) GetCollection(ctx *gin.Context) {
 		fileId = 0
 	}
 
-	owner, got := ctx.GetQuery("owner")
-	if !got {
-		owner = ethAddress
-	}
-	if owner == "" {
-		api.BadRequest(ctx, "invalid.param", "")
-		return
-	}
+	owner, _ := ctx.GetQuery("owner")
 
 	offset, got := ctx.GetQuery("offset")
 	if !got {
