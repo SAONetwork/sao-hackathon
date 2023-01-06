@@ -138,14 +138,14 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 		collections = append(collections, collection)
 		totalCollections = 1
 	} else if ethAddr != "" && fileID > 0 {
+		model.DB.Model(&Collection{}).Where("eth_addr = ?", ethAddr).Count(&totalCollections)
 		model.DB.Where("eth_addr = ?", ethAddr).Limit(limit).Offset(offset).Find(&collections)
-		model.DB.Where("eth_addr = ?", ethAddr).Count(&totalCollections)
 	} else if ethAddr != "" {
+		model.DB.Model(&Collection{}).Where("eth_addr = ?", ethAddr).Count(&totalCollections)
 		model.DB.Where("eth_addr = ?", ethAddr).Limit(limit).Offset(offset).Find(&collections)
-		model.DB.Where("eth_addr = ?", ethAddr).Count(&totalCollections)
 	} else if fileID > 0 {
-		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?)) limit ? offset ?", fileID, address, limit, offset).Find(&collections)
 		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?))", fileID, address).Count(&totalCollections)
+		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?)) limit ? offset ?", fileID, address, limit, offset).Find(&collections)
 	}
 
 	var collectionVOS []CollectionVO
