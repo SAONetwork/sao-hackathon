@@ -143,6 +143,13 @@ var initCmd = &cli.Command{
 			return err
 		}
 
+		if err = db.AutoMigrate(&model.CollectionComment{}); err != nil {
+			return err
+		}
+		if err = db.AutoMigrate(&model.CollectionCommentLike{}); err != nil {
+			return err
+		}
+
 		log.Info("initialize saods succeed.")
 
 		return nil

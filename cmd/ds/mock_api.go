@@ -24,6 +24,12 @@ type MockFileComment struct {
 	ParentId uint
 }
 
+type MockCollectionComment struct {
+	Comment  string
+	CollectionId   uint
+	ParentId uint
+}
+
 // @Tags Collection
 // @Title GetCollection
 // @Description get collection by address
@@ -230,6 +236,62 @@ func LikeFileComment(ctx *gin.Context) {
 // @router /comment/like [delete]
 func UnLikeFileComment(ctx *gin.Context) {
 }
+
+// @Tags Comment
+// @Title AddCollectionComment
+// @Description add collection comment
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	body		body 	MockCollectionComment	true		"body for request"
+// @router /comment/collection [post]
+func AddCollectionComment(ctx *gin.Context) {
+}
+
+// @Tags Comment
+// @Title DeleteCollectionComment
+// @Description delete collection comment
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	commentId		path 	string	true		"The comment id for deletion"
+// @router /comment/collection/{commentId} [delete]
+func DeleteCollectionComment(ctx *gin.Context) {
+}
+
+// @Tags Comment
+// @Title GetCollectionComments
+// @Description get collection comments
+// @Param address header string false "user's ethereum address"
+// @Param signaturemessage header string false "user's ethereum signaturemessage"
+// @Param signature header string false "user's ethereum signature"
+// @Param	collectionId		query 	string	false		"The collection id for query"
+// @router /comment/collection [get]
+func GetCollectionComments(ctx *gin.Context) {
+}
+
+// @Tags Comment
+// @Title LikeCollectionComment
+// @Description like collection comment
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	commentId		query 	string	true		"The comment id for like operation"
+// @router /comment/collection/like [post]
+func LikeCollectionComment(ctx *gin.Context) {
+}
+
+// @Tags Comment
+// @Title UnLikeCollectionComment
+// @Description unlike collection comment
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	commentId		query 	string	true		"The comment id for unlike operation"
+// @router /comment/collection/like [delete]
+func UnLikeCollectionComment(ctx *gin.Context) {
+}
+
 
 // @Tags User
 // @Title GetUserProfile

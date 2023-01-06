@@ -60,6 +60,11 @@ func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.Han
 		hackathon.DELETE("/comment/file/:commentId", s.DeleteFileComment)
 		hackathon.POST("/comment/like", s.LikeFileComment)
 		hackathon.DELETE("/comment/like", s.UnLikeFileComment)
+
+		hackathon.POST("/comment/collection", s.AddCollectionComment)
+		hackathon.DELETE("/comment/collection/:commentId", s.DeleteCollectionComment)
+		hackathon.POST("/comment/collection/like", s.LikeCollectionComment)
+		hackathon.DELETE("/comment/collection/like", s.UnLikeCollectionComment)
 	}
 
 	noSignature := r.Group(contextPath + "/api/v1")
@@ -75,6 +80,7 @@ func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.Han
 		noSignature.GET("/collection/fileInfos", s.FileInfosByCollectionId)
 		noSignature.GET("/collection/liked", s.GetLikedCollection)
 		noSignature.GET("/comment/file", s.GetFileComments)
+		noSignature.GET("/comment/collection", s.GetCollectionComments)
 	}
 
 	fmt.Println(s.Config.PreviewsPath)

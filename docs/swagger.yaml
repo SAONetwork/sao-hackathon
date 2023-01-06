@@ -16,6 +16,15 @@ definitions:
       type:
         type: integer
     type: object
+  main.MockCollectionComment:
+    properties:
+      collectionId:
+        type: integer
+      comment:
+        type: string
+      parentId:
+        type: integer
+    type: object
   main.MockCollectionRequest:
     properties:
       collectionIds:
@@ -319,6 +328,136 @@ paths:
       responses: {}
       tags:
       - Collection
+  /comment/collection:
+    get:
+      description: get collection comments
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        type: string
+      - description: The collection id for query
+        in: query
+        name: collectionId
+        type: string
+      responses: {}
+      tags:
+      - Comment
+    post:
+      description: add collection comment
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: body for request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.MockCollectionComment'
+      responses: {}
+      tags:
+      - Comment
+  /comment/collection/{commentId}:
+    delete:
+      description: delete collection comment
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The comment id for deletion
+        in: path
+        name: commentId
+        required: true
+        type: string
+      responses: {}
+      tags:
+      - Comment
+  /comment/collection/like:
+    delete:
+      description: unlike collection comment
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The comment id for unlike operation
+        in: query
+        name: commentId
+        required: true
+        type: string
+      responses: {}
+      tags:
+      - Comment
+    post:
+      description: like collection comment
+      parameters:
+      - description: user's ethereum address
+        in: header
+        name: address
+        required: true
+        type: string
+      - description: user's ethereum signaturemessage
+        in: header
+        name: signaturemessage
+        required: true
+        type: string
+      - description: user's ethereum signature
+        in: header
+        name: signature
+        required: true
+        type: string
+      - description: The comment id for like operation
+        in: query
+        name: commentId
+        required: true
+        type: string
+      responses: {}
+      tags:
+      - Comment
   /comment/file:
     get:
       description: get file comments
