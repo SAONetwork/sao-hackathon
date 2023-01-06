@@ -61,6 +61,7 @@ type CollectionVO struct {
 	Type         int
 	Liked        bool
 	TotalLikes   int64
+	TotalComments int64
 	FileIncluded bool
 }
 
@@ -170,28 +171,31 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 		}
 
 		liked := false
+		var totalComments int64
 		if collectionId > 0 {
 			var count int64
 			model.DB.Model(&CollectionLike{}).Where("eth_addr = ? and collection_id = ? ", address, c.Id).Count(&count)
 			if count > 0 {
 				liked = true
 			}
+			model.DB.Model(&CollectionComment{}).Where("status <> 2 and collection_id = ? ", c.Id).Count(&totalComments)
 		}
 		collectionVOS = append(collectionVOS, CollectionVO{
 			Id:           c.Id,
 			CreatedAt:    c.CreatedAt.UnixMilli(),
 			UpdatedAt:    c.UpdatedAt.UnixMilli(),
-			EthAddr:      c.EthAddr,
-			Preview:      fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview),
-			Title:        c.Title,
-			Labels:       c.Labels,
-			Description:  c.Description,
-			Type:         c.Type,
-			TotalFiles:   totalFiles,
-			MaxFiles:     100,
-			FileIncluded: fileIncluded,
-			TotalLikes:   totalLikes,
-			Liked:        liked,
+			EthAddr:       c.EthAddr,
+			Preview:       fmt.Sprintf("%s/%s/%s", model.Config.ApiServer.Host, "previews", c.Preview),
+			Title:         c.Title,
+			Labels:        c.Labels,
+			Description:   c.Description,
+			Type:          c.Type,
+			TotalFiles:    totalFiles,
+			MaxFiles:      100,
+			FileIncluded:  fileIncluded,
+			TotalLikes:    totalLikes,
+			TotalComments: totalComments,
+			Liked:         liked,
 		})
 	}
 
