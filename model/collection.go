@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"github.com/gwaylib/log"
 	"golang.org/x/xerrors"
 	"gorm.io/gorm"
 )
@@ -144,7 +145,10 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 		model.DB.Model(&Collection{}).Where("eth_addr = ?", ethAddr).Count(&totalCollections)
 		model.DB.Where("eth_addr = ?", ethAddr).Limit(limit).Offset(offset).Find(&collections)
 	} else if fileID > 0 {
-		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?))", fileID, address).Count(&totalCollections)
+		err := model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?))", fileID, address).Count(&totalCollections).Error
+		if err != nil {
+			log.Error(err)
+		}
 		model.DB.Raw("select c.* from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?)) limit ? offset ?", fileID, address, limit, offset).Find(&collections)
 	}
 
