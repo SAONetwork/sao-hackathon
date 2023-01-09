@@ -145,7 +145,7 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 			criteria = criteria + " and type = 0"
 		}
 		model.DB.Model(&Collection{}).Where(criteria, ethAddr).Count(&totalCollections)
-		model.DB.Where("eth_addr = ?", ethAddr).Limit(limit).Offset(offset).Find(&collections)
+		model.DB.Where(criteria, ethAddr).Limit(limit).Offset(offset).Find(&collections)
 	} else if fileID > 0 {
 		err := model.DB.Raw("select count(*) from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?))", fileID, address).Find(&totalCollections).Error
 		if err != nil {
