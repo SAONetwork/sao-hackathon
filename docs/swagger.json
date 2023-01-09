@@ -793,6 +793,45 @@
                 "responses": {}
             }
         },
+        "/file/{fileId}": {
+            "delete": {
+                "description": "delete file",
+                "tags": [
+                    "File"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The file id for deletion",
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/fileStar": {
             "post": {
                 "description": "mark star to a file",

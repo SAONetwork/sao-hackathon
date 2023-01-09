@@ -168,6 +168,16 @@ func StarFile(ctx *gin.Context) {
 func DeleteStarFile(ctx *gin.Context) {
 }
 
+// @Tags File
+// @Title DeleteFile
+// @Description delete file
+// @Param address header string true "user's ethereum address"
+// @Param signaturemessage header string true "user's ethereum signaturemessage"
+// @Param signature header string true "user's ethereum signature"
+// @Param	fileId		path 	string	true		"The file id for deletion"
+// @router /file/{fileId} [delete]
+func DeleteFile(ctx *gin.Context) {
+}
 
 // @Tags Search
 // @Title GeneralSearch

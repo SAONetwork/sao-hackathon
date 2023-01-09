@@ -127,6 +127,26 @@ func (s *Server) DeleteUploaded(ctx *gin.Context) {
 	api.Success(ctx, nil)
 }
 
+func (s *Server) DeleteFile(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	fileId, err := strconv.ParseInt(ctx.Param("fileId"), 10, 64)
+	if err != nil {
+		api.BadRequest(ctx, "invalid.param", "")
+		return
+	}
+	err = s.deleteFile(ctx, uint(fileId), ethAddress.(string))
+	if err != nil {
+		api.ServerError(ctx, "deleteFile.error", err.Error())
+		return
+	}
+	api.Success(ctx, nil)
+}
+
 func (s *Server) FileInfo(ctx *gin.Context) {
 	ethAddress := ctx.GetHeader("address")
 	util.VerifySignature(ctx)

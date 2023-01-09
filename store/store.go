@@ -208,6 +208,17 @@ func (a StoreService) EncryptFileChunk(ctx context.Context, preview *model.FileP
 	}
 }
 
+func(a StoreService) DeleteFile(ctx context.Context, ipfsHash string) error {
+	err := a.store.DeleteFile(ctx, map[string]string{
+		"hash": ipfsHash,
+	})
+	if err != nil {
+		log.Warn("delete file error: ", err)
+		return err
+	}
+	return nil
+}
+
 func (a StoreService) GetFile(ctx context.Context, previewId uint, ethAddr string) (*model.FileInfo, io.ReadCloser, error) {
 	filePreview, err := a.m.GetFilePreviewById(previewId)
 	if err != nil {

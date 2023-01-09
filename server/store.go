@@ -392,6 +392,28 @@ func (s *Server) deleteUploaded(previewId uint, ethAddress string) error {
 	return nil
 }
 
+func (s *Server) deleteFile(ctx context.Context, fileId uint, ethAddress string) error {
+	filePreview, err := s.Model.GetFilePreviewById(fileId)
+	if err != nil {
+		return errors.New("get file failed")
+	}
+	if filePreview.EthAddr != ethAddress {
+		return errors.New("invalid fileId")
+	}
+
+	ipfsHash, err := s.Model.DeleteFile(filePreview)
+	if err != nil {
+		log.Error(err)
+		return errors.New("delete file failed")
+	}
+
+	err = s.StoreService.DeleteFile(ctx, ipfsHash)
+	if err != nil {
+		log.Error(err)
+	}
+	return nil
+}
+
 func (s *Server) getFileInfos(ethAddress string, offset int, limit int, category string, format string, price int) *model.PagedFileInfoInMarket {
 	contentType, _ := formatContentTypeMaps[strings.ToUpper(format)]
 	condition := map[string]interface{}{}
