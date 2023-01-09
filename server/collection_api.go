@@ -112,7 +112,7 @@ func (s *Server) GetLikedCollection(ctx *gin.Context) {
 		l = 10
 	}
 
-	collections, err := s.Model.GetLikedCollection(userAddress, o, l)
+	collections, err := s.Model.GetLikedCollection(userAddress, o, l, ethAddress)
 	if err != nil {
 		log.Error(err)
 	}

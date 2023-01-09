@@ -139,11 +139,12 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 		}
 		collections = append(collections, collection)
 		totalCollections = 1
-	} else if ethAddr != "" && fileID > 0 {
-		model.DB.Model(&Collection{}).Where("eth_addr = ?", ethAddr).Count(&totalCollections)
-		model.DB.Where("eth_addr = ?", ethAddr).Limit(limit).Offset(offset).Find(&collections)
 	} else if ethAddr != "" {
-		model.DB.Model(&Collection{}).Where("eth_addr = ?", ethAddr).Count(&totalCollections)
+		criteria := "eth_addr = ?"
+		if ethAddr != address {
+			criteria = criteria + " and type = 0"
+		}
+		model.DB.Model(&Collection{}).Where(criteria, ethAddr).Count(&totalCollections)
 		model.DB.Where("eth_addr = ?", ethAddr).Limit(limit).Offset(offset).Find(&collections)
 	} else if fileID > 0 {
 		err := model.DB.Raw("select count(*) from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?))", fileID, address).Find(&totalCollections).Error
@@ -207,12 +208,16 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 	return &result, nil
 }
 
-func (model *Model) GetLikedCollection(ethAddr string, offset int, limit int) (*CollectionResponse, error) {
+func (model *Model) GetLikedCollection(ethAddr string, offset int, limit int, address string) (*CollectionResponse, error) {
 	var collections []Collection
 	var totalCollections int64
 
-	model.DB.Raw("select c.* from collections c inner join collection_likes l on c.id = l.collection_id where l.deleted_at is null and c.deleted_at is null and l.eth_addr = ? limit ? offset ?", ethAddr, limit, offset).Find(&collections)
-	model.DB.Raw("select c.* from collections c inner join collection_likes l on c.id = l.collection_id where l.deleted_at is null and c.deleted_at is null and l.eth_addr = ?", ethAddr).Count(&totalCollections)
+	baseCriteria := "from collections c inner join collection_likes l on c.id = l.collection_id where l.deleted_at is null and c.deleted_at is null and l.eth_addr = ?"
+	if ethAddr != address {
+		baseCriteria = baseCriteria + " and c.type = 0"
+	}
+	model.DB.Raw("select c.* " + baseCriteria + " limit ? offset ?", ethAddr, limit, offset).Find(&collections)
+	model.DB.Raw("select count(*) " + baseCriteria, ethAddr).Find(&totalCollections)
 
 	var collectionVOS []CollectionVO
 	for _, c := range collections {
