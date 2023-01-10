@@ -112,6 +112,9 @@ func (model *Model) GetSearchCollectionResult(key string) (*[]CollectionVO, erro
 
 	var result []CollectionVO
 	for _, c := range collections {
+		var totalFiles int64
+		model.DB.Model(&CollectionFile{}).Where("collection_id = ? ", c.Id).Count(&totalFiles)
+
 		result = append(result, CollectionVO{
 			Id:          c.Id,
 			CreatedAt:   c.CreatedAt.UnixMilli(),
@@ -123,6 +126,7 @@ func (model *Model) GetSearchCollectionResult(key string) (*[]CollectionVO, erro
 			Description: c.Description,
 			Type:        c.Type,
 			MaxFiles:    100,
+			TotalFiles:  totalFiles,
 		})
 	}
 	return &result, nil

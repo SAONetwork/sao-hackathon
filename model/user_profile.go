@@ -302,6 +302,15 @@ func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, prev
 			paid = false
 		}
 
+		star := false
+		if selfAddress != "" {
+			var starCount int64
+			model.DB.Model(&CollectionFile{}).Where("eth_addr = ? and file_id = ? ", selfAddress, upload.Id).Count(&starCount)
+			if starCount > 0 {
+				star = true
+			}
+		}
+
 		fileInfoInMarket = append(fileInfoInMarket, FileInfoInMarket{Id: upload.Id,
 			CreatedAt:      upload.CreatedAt,
 			UpdatedAt:      upload.UpdatedAt,
@@ -318,7 +327,8 @@ func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, prev
 			FileCategory:   upload.FileCategory,
 			AdditionalInfo: upload.AdditionalInfo,
 			FileExtension:  fileExtension,
-			AlreadyPaid:    paid})
+			AlreadyPaid:    paid,
+			Star:           star})
 	}
 	dashboard.RecentUploads = fileInfoInMarket
 
@@ -353,6 +363,15 @@ func (model *Model) GetUserPurchases(limit int, offset int, ethAddr string, prev
 			}
 		}
 
+		star := false
+		if selfAddress != "" {
+			var starCount int64
+			model.DB.Model(&CollectionFile{}).Where("eth_addr = ? and file_id = ? ", selfAddress, upload.Id).Count(&starCount)
+			if starCount > 0 {
+				star = true
+			}
+		}
+
 		fileInfoInMarket = append(fileInfoInMarket, FileInfoInMarket{Id: upload.Id,
 			CreatedAt:      upload.CreatedAt,
 			UpdatedAt:      upload.UpdatedAt,
@@ -368,7 +387,8 @@ func (model *Model) GetUserPurchases(limit int, offset int, ethAddr string, prev
 			NftTokenId:     upload.NftTokenId,
 			FileCategory:   upload.FileCategory,
 			AdditionalInfo: upload.AdditionalInfo,
-			AlreadyPaid:    paid})
+			AlreadyPaid:    paid,
+			Star:           star})
 	}
 	purchases.Purchases = fileInfoInMarket
 
