@@ -6,6 +6,7 @@ import (
 	"github.com/gwaylib/log"
 	"golang.org/x/xerrors"
 	"gorm.io/gorm"
+	"strings"
 )
 
 type Collection struct {
@@ -141,14 +142,14 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 		if result.Error != nil {
 			return nil, result.Error
 		}
-		if collection.Type == 1 && collection.EthAddr != address {
+		if collection.Type == 1 && !strings.EqualFold(collection.EthAddr, address) {
 			return nil, xerrors.New("you are not allowed to visit private collection")
 		}
 		collections = append(collections, collection)
 		totalCollections = 1
 	} else if ethAddr != "" {
 		criteria := "eth_addr = ?"
-		if ethAddr != address {
+		if !strings.EqualFold(ethAddr, address) {
 			criteria = criteria + " and type = 0"
 		}
 		model.DB.Model(&Collection{}).Where(criteria, ethAddr).Count(&totalCollections)

@@ -7,6 +7,7 @@ import (
 	"golang.org/x/xerrors"
 	"gorm.io/gorm"
 	"path/filepath"
+	"strings"
 )
 
 type UserProfile struct {
@@ -192,7 +193,7 @@ func (model *Model) GetUserProfile(ethAddr string, address string) (*UserProfile
 
 	var totalCollections int64
 	criteria := "eth_addr = ?"
-	if ethAddr != address {
+	if !strings.EqualFold(ethAddr, address) {
 		criteria = criteria + " and type = 0"
 	}
 	model.DB.Model(&Collection{}).Where(criteria, user.EthAddr).Count(&totalCollections)
