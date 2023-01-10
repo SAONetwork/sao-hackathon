@@ -221,7 +221,7 @@ func (model *Model) GetLikedCollection(ethAddr string, offset int, limit int, ad
 	var totalCollections int64
 
 	baseCriteria := "from collections c inner join collection_likes l on c.id = l.collection_id where l.deleted_at is null and c.deleted_at is null and l.eth_addr = ?"
-	if ethAddr != address {
+	if !strings.EqualFold(ethAddr, address) {
 		baseCriteria = baseCriteria + " and c.type = 0"
 	}
 	model.DB.Raw("select c.* " + baseCriteria + " limit ? offset ?", ethAddr, limit, offset).Find(&collections)
