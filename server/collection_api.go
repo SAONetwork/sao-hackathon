@@ -385,6 +385,9 @@ func (s *Server) GetRecommendedTags(ctx *gin.Context) {
 	var labels []string
 	labelIndex := 0
 	for _, coarseTopic := range textRazor.Response.CoarseTopics {
+		if len(coarseTopic.Label) > 20 {
+			continue
+		}
 		labels = append(labels, coarseTopic.Label)
 		labelIndex++
 		if labelIndex >= 2 {
@@ -393,6 +396,9 @@ func (s *Server) GetRecommendedTags(ctx *gin.Context) {
 	}
 
 	for _, topic := range textRazor.Response.Topics {
+		if len(topic.Label) > 20 {
+			continue
+		}
 		labels = append(labels, topic.Label)
 		labelIndex++
 		if labelIndex >= 6 {
