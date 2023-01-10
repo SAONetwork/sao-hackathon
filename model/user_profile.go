@@ -191,7 +191,11 @@ func (model *Model) GetUserProfile(ethAddr string, address string) (*UserProfile
 	model.DB.Model(&FilePreview{}).Where(&FilePreview{EthAddr: user.EthAddr}).Where("status = 1 or (status = 2 and price = 0) or (status = 2 and price > 0 and nft_token_id > 0)").Count(&uploads)
 
 	var totalCollections int64
-	model.DB.Model(&Collection{}).Where(&Collection{EthAddr: user.EthAddr}).Count(&totalCollections)
+	criteria := "eth_addr = ?"
+	if ethAddr != address {
+		criteria = criteria + " and type = 0"
+	}
+	model.DB.Model(&Collection{}).Where(criteria, user.EthAddr).Count(&totalCollections)
 
 	var totalFollowers int64
 	model.DB.Model(&UserFollowing{}).Where(&UserFollowing{Following: user.EthAddr}).Count(&totalFollowers)

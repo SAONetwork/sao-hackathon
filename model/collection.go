@@ -141,6 +141,9 @@ func (model *Model) GetCollection(collectionId uint, ethAddr string, fileID uint
 		if result.Error != nil {
 			return nil, result.Error
 		}
+		if collection.Type == 1 && collection.EthAddr != address {
+			return nil, xerrors.New("you are not allowed to visit private collection")
+		}
 		collections = append(collections, collection)
 		totalCollections = 1
 	} else if ethAddr != "" {

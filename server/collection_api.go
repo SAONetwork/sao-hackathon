@@ -170,6 +170,7 @@ func (s *Server) GetCollection(ctx *gin.Context) {
 	collections, err := s.Model.GetCollection(uint(collectionId), owner, uint(fileId), ethAddress, o, l)
 	if err != nil {
 		log.Error(err)
+		api.ServerError(ctx, "getCollection.error", err.Error())
 	}
 	api.Success(ctx, collections)
 }
