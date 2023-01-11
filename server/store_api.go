@@ -88,7 +88,7 @@ func (s *Server) AddFileWithPreview(ctx *gin.Context) {
 	var imageType string
 	idx := strings.Index(filePreview.Preview, ";base64,")
 	if idx > 0 {
-		imageType = filePreview.Preview[6:idx]
+		imageType = filePreview.Preview[5:idx]
 		log.Info(imageType)
 	}
 
@@ -103,7 +103,7 @@ func (s *Server) AddFileWithPreview(ctx *gin.Context) {
 		SaveGIF(preview, gifImg)
 		filePreview.Preview = fmt.Sprintf("%s.gif", id)
 	} else if imageType == "image/png" {
-		img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview)))
+		img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
 		if err != nil {
 			log.Info(err)
 			api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png decode failed"))
@@ -115,7 +115,7 @@ func (s *Server) AddFileWithPreview(ctx *gin.Context) {
 		dc.SavePNG(preview)
 		filePreview.Preview = fmt.Sprintf("%s.png", id)
 	} else if imageType == "image/jpeg" {
-		img, err := jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview)))
+		img, err := jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
 		if err != nil {
 			api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "jpeg decode failed"))
 			return
