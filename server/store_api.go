@@ -85,30 +85,40 @@ func (s *Server) AddFileWithPreview(ctx *gin.Context) {
 		return
 	}
 
+	var imageType string
 	idx := strings.Index(filePreview.Preview, ";base64,")
-	if idx > 0 || filePreview.ContentType == "image/gif" {
-		ImageType := filePreview.Preview[11:idx]
-		log.Info(ImageType)
-		if ImageType == "gif" {
-			gifImg, err := gif.DecodeAll(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
-			if err != nil {
-				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "gif decode failed"))
-				return
-			}
-			id := uuid.New().String()
-			preview := fmt.Sprintf("%s/%s.gif", s.Config.PreviewsPath, id)
-			SaveGIF(preview, gifImg)
-			filePreview.Preview = fmt.Sprintf("%s.gif", id)
+	if idx > 0 {
+		imageType = filePreview.Preview[6:idx]
+		log.Info(imageType)
+	}
+
+	if imageType == "image/gif" {
+		gifImg, err := gif.DecodeAll(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
+		if err != nil {
+			api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "gif decode failed"))
+			return
 		}
-	} else {
+		id := uuid.New().String()
+		preview := fmt.Sprintf("%s/%s.gif", s.Config.PreviewsPath, id)
+		SaveGIF(preview, gifImg)
+		filePreview.Preview = fmt.Sprintf("%s.gif", id)
+	} else if imageType == "image/png" {
 		img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview)))
 		if err != nil {
 			log.Info(err)
-			img, err = jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview)))
-			if err != nil {
-				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png and jpeg decode failed"))
-				return
-			}
+			api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png decode failed"))
+			return
+		}
+		id := uuid.New().String()
+		dc := gg.NewContextForImage(img)
+		preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
+		dc.SavePNG(preview)
+		filePreview.Preview = fmt.Sprintf("%s.png", id)
+	} else if imageType == "image/jpeg" {
+		img, err := jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview)))
+		if err != nil {
+			api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "jpeg decode failed"))
+			return
 		}
 		id := uuid.New().String()
 		dc := gg.NewContextForImage(img)

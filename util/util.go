@@ -173,7 +173,7 @@ func GenerateImgFromImgFile(contentType string, tempFileName string) (string, st
 		}
 		gif.EncodeAll(&buf, gifImage)
 		data := buf.Bytes()
-		return base64.StdEncoding.EncodeToString(data), tempFileName, nil
+		return fmt.Sprintf("data:%s;base64,%s", contentType, base64.StdEncoding.EncodeToString(data)), tempFileName, nil
 	}
 
 	if contentType == "image/png" {
@@ -188,7 +188,7 @@ func GenerateImgFromImgFile(contentType string, tempFileName string) (string, st
 	dc := gg.NewContextForImage(srcImage)
 	dc.EncodePNG(&buf)
 	data := buf.Bytes()
-	return base64.StdEncoding.EncodeToString(data), tempFileName, nil
+	return fmt.Sprintf("data:%s;base64,%s", contentType, base64.StdEncoding.EncodeToString(data)), tempFileName, nil
 }
 
 func LoadGIF(path string) (*gif.GIF, error) {
