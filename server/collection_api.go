@@ -7,6 +7,7 @@ import (
 	"github.com/fogleman/gg"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io/ioutil"
@@ -35,20 +36,47 @@ func (s *Server) UpsertCollection(ctx *gin.Context) {
 	}
 
 	if collection.Preview != "" {
-		img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview)))
-		if err != nil {
-			log.Info(err)
-			img, err = jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview)))
+		var imageType string
+		idx := strings.Index(collection.Preview, ";base64,")
+		if idx > 0 {
+			imageType = collection.Preview[5:idx]
+			log.Info(imageType)
+		}
+
+		if imageType == "image/gif" {
+			gifImg, err := gif.DecodeAll(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview[idx+8:])))
+			if err != nil {
+				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "gif decode failed"))
+				return
+			}
+			id := uuid.New().String()
+			preview := fmt.Sprintf("%s/%s.gif", s.Config.PreviewsPath, id)
+			SaveGIF(preview, gifImg)
+			collection.Preview = fmt.Sprintf("%s.gif", id)
+		} else if imageType == "image/png" {
+			img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview[idx+8:])))
+			if err != nil {
+				log.Info(err)
+				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png and jpeg decode failed"))
+				return
+			}
+			id := uuid.New().String()
+			dc := gg.NewContextForImage(img)
+			preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
+			dc.SavePNG(preview)
+			collection.Preview = fmt.Sprintf("%s.png", id)
+		} else if imageType == "image/jpeg" {
+			img, err := jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview[idx+8:])))
 			if err != nil {
 				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png and jpeg decode failed"))
 				return
 			}
+			id := uuid.New().String()
+			dc := gg.NewContextForImage(img)
+			preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
+			dc.SavePNG(preview)
+			collection.Preview = fmt.Sprintf("%s.png", id)
 		}
-		id := uuid.New().String()
-		dc := gg.NewContextForImage(img)
-		preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
-		dc.SavePNG(preview)
-		collection.Preview = fmt.Sprintf("%s.png", id)
 	}
 
 	err = s.Model.UpsertCollection(&collection)
