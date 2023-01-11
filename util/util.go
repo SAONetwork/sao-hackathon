@@ -8,6 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/color/palette"
+	"image/draw"
+	"image/gif"
 	"io"
 	"net/http"
 	"os"
@@ -139,7 +142,7 @@ func DoRpc(ctx context.Context, s network.Stream, req interface{}, resp interfac
 }
 
 func GenerateImgPreview(contentType string, tempFileName string) (string, string, error) {
-	if contentType == "image/png" || contentType == "image/jpeg" {
+	if contentType == "image/png" || contentType == "image/jpeg" || contentType == "image/gif" {
 		return GenerateImgFromImgFile(contentType, tempFileName)
 	} else if contentType == "video/mp4" {
 		previewFileName := fmt.Sprintf("%s.jpg", tempFileName)
@@ -159,6 +162,20 @@ func GenerateImgFromImgFile(contentType string, tempFileName string) (string, st
 	var srcImage image.Image
 	var err error
 	var buf bytes.Buffer
+	if contentType == "image/gif" {
+		gifImage, err := LoadGIF(tempFileName)
+		if err != nil {
+			return "",tempFileName, err
+		}
+		gifImage, err = ResizeGif(gifImage, 256, 256)
+		if err != nil {
+			return "",tempFileName, err
+		}
+		gif.EncodeAll(&buf, gifImage)
+		data := buf.Bytes()
+		return base64.StdEncoding.EncodeToString(data), tempFileName, nil
+	}
+
 	if contentType == "image/png" {
 		srcImage, err = gg.LoadPNG(tempFileName)
 	} else {
@@ -174,3 +191,43 @@ func GenerateImgFromImgFile(contentType string, tempFileName string) (string, st
 	return base64.StdEncoding.EncodeToString(data), tempFileName, nil
 }
 
+func LoadGIF(path string) (*gif.GIF, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	return gif.DecodeAll(file)
+}
+
+// Resize the gif to another thumbnail gif
+func ResizeGif(im *gif.GIF, width int, height int) (*gif.GIF, error) {
+	if width == 0 {
+		width = int(im.Config.Width * height / im.Config.Width)
+	} else if height == 0 {
+		height = int(width * im.Config.Height / im.Config.Width)
+	}
+
+	// reset the gif width and height
+	im.Config.Width = width
+	im.Config.Height = height
+
+	firstFrame := im.Image[0].Bounds()
+	img := image.NewRGBA(image.Rect(0, 0, firstFrame.Dx(), firstFrame.Dy()))
+
+	// resize frame by frame
+	for index, frame := range im.Image {
+		b := frame.Bounds()
+		draw.Draw(img, b, frame, b.Min, draw.Over)
+		im.Image[index] = ImageToPaletted(resize.Thumbnail(uint(width), uint(height), img, resize.Lanczos3))
+	}
+
+	return im, nil
+}
+
+func ImageToPaletted(img image.Image) *image.Paletted {
+	b := img.Bounds()
+	pm := image.NewPaletted(b, palette.Plan9)
+	draw.FloydSteinberg.Draw(pm, b, img, image.ZP)
+	return pm
+}

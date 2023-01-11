@@ -4,9 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io"
+	"os"
 	"sao-datastore-storage/model"
 	"sao-datastore-storage/util"
 	"sao-datastore-storage/util/api"
@@ -83,20 +85,37 @@ func (s *Server) AddFileWithPreview(ctx *gin.Context) {
 		return
 	}
 
-	img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview)))
-	if err != nil {
-		log.Info(err)
-		img, err = jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview)))
-		if err != nil {
-			api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png and jpeg decode failed"))
-			return
+	idx := strings.Index(filePreview.Preview, ";base64,")
+	if idx > 0 || filePreview.ContentType == "image/gif" {
+		ImageType := filePreview.Preview[11:idx]
+		log.Info(ImageType)
+		if ImageType == "gif" {
+			gifImg, err := gif.DecodeAll(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
+			if err != nil {
+				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "gif decode failed"))
+				return
+			}
+			id := uuid.New().String()
+			preview := fmt.Sprintf("%s/%s.gif", s.Config.PreviewsPath, id)
+			SaveGIF(preview, gifImg)
+			filePreview.Preview = fmt.Sprintf("%s.gif", id)
 		}
+	} else {
+		img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview)))
+		if err != nil {
+			log.Info(err)
+			img, err = jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview)))
+			if err != nil {
+				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png and jpeg decode failed"))
+				return
+			}
+		}
+		id := uuid.New().String()
+		dc := gg.NewContextForImage(img)
+		preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
+		dc.SavePNG(preview)
+		filePreview.Preview = fmt.Sprintf("%s.png", id)
 	}
-	id := uuid.New().String()
-	dc := gg.NewContextForImage(img)
-	preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
-	dc.SavePNG(preview)
-	filePreview.Preview = fmt.Sprintf("%s.png", id)
 
 	fi, err := s.StoreFileWithPreview(ctx.Request.Context(), filePreview, ethAddress.(string))
 	if err != nil {
@@ -340,4 +359,13 @@ func (s *Server) DeleteStarFile(ctx *gin.Context) {
 		return
 	}
 	api.Success(ctx, true)
+}
+
+func SaveGIF(path string, im *gif.GIF) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return gif.EncodeAll(file, im)
 }
