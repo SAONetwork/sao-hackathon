@@ -85,7 +85,7 @@ func (model *Model) UpsertCollection(collection *Collection) error {
 		return result.Error
 	}
 	if c.Id > 0 {
-		return model.DB.Where("id = ?", collection.Id).Updates(collection).Error
+		return model.DB.Where("id = ?", collection.Id).Updates(collection).Update("type", collection.Type).Error
 	}
 	return nil
 }

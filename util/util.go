@@ -203,9 +203,9 @@ func LoadGIF(path string) (*gif.GIF, error) {
 // Resize the gif to another thumbnail gif
 func ResizeGif(im *gif.GIF, width int, height int) (*gif.GIF, error) {
 	if width == 0 {
-		width = int(im.Config.Width * height / im.Config.Width)
+		width = im.Config.Width * height / im.Config.Width
 	} else if height == 0 {
-		height = int(width * im.Config.Height / im.Config.Width)
+		height = width * im.Config.Height / im.Config.Width
 	}
 
 	// reset the gif width and height

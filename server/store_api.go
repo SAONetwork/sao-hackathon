@@ -100,8 +100,8 @@ func (s *Server) AddFileWithPreview(ctx *gin.Context) {
 		}
 		id := uuid.New().String()
 		preview := fmt.Sprintf("%s/%s.gif", s.Config.PreviewsPath, id)
-		SaveGIF(preview, gifImg)
 		filePreview.Preview = fmt.Sprintf("%s.gif", id)
+		SaveGIF(preview, gifImg)
 	} else if imageType == "image/png" {
 		img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
 		if err != nil {
@@ -110,10 +110,10 @@ func (s *Server) AddFileWithPreview(ctx *gin.Context) {
 			return
 		}
 		id := uuid.New().String()
-		dc := gg.NewContextForImage(img)
 		preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
-		dc.SavePNG(preview)
 		filePreview.Preview = fmt.Sprintf("%s.png", id)
+		dc := gg.NewContextForImage(img)
+		dc.SavePNG(preview)
 	} else if imageType == "image/jpeg" {
 		img, err := jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
 		if err != nil {
@@ -121,10 +121,10 @@ func (s *Server) AddFileWithPreview(ctx *gin.Context) {
 			return
 		}
 		id := uuid.New().String()
-		dc := gg.NewContextForImage(img)
 		preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
-		dc.SavePNG(preview)
 		filePreview.Preview = fmt.Sprintf("%s.png", id)
+		dc := gg.NewContextForImage(img)
+		dc.SavePNG(preview)
 	}
 
 	fi, err := s.StoreFileWithPreview(ctx.Request.Context(), filePreview, ethAddress.(string))
