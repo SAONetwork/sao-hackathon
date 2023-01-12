@@ -66,7 +66,7 @@ func DetectReaderType(reader io.Reader) (string, error) {
 }
 
 func GenerateTags(contentType string, tempFileName string) (string, error) {
-	if contentType == "image/png" || contentType == "image/jpeg" || contentType == "video/mp4" {
+	if contentType == "image/png" || contentType == "image/jpeg" || contentType == "video/mp4" || contentType == "image/gif" {
 		ctx := context.Background()
 		client, err := vision.NewImageAnnotatorClient(ctx)
 		if err != nil {
