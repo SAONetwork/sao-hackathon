@@ -167,7 +167,7 @@ func GenerateImgFromImgFile(contentType string, tempFileName string) (string, st
 		if err != nil {
 			return "",tempFileName, err
 		}
-		gifImage, err = ResizeGif(gifImage, 256, 256)
+		gifImage, err = ResizeGif(gifImage, 256, 0)
 		if err != nil {
 			return "",tempFileName, err
 		}
@@ -219,7 +219,7 @@ func ResizeGif(im *gif.GIF, width int, height int) (*gif.GIF, error) {
 	for index, frame := range im.Image {
 		b := frame.Bounds()
 		draw.Draw(img, b, frame, b.Min, draw.Over)
-		im.Image[index] = ImageToPaletted(resize.Thumbnail(uint(width), uint(height), img, resize.Lanczos3))
+		im.Image[index] = ImageToPaletted(resize.Resize(uint(width), uint(height), img, resize.NearestNeighbor))
 	}
 
 	return im, nil
