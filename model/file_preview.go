@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/shopspring/decimal"
 	"math/big"
 	"path/filepath"
@@ -203,18 +204,23 @@ func (model *Model) GetFileInfosByCollectionId(collectionId string, ethAddress s
 func (model *Model) GetSearchFileResult(key string, ethAddress string, offset int, limit int) []FileInfoInMarket {
 	var filePreviews []FilePreview
 
-	bindKey := "%"+key+"%"
-	model.DB.Offset(offset).Limit(limit).Raw("select *,\n" +
-		"       case when title like ? then 3 else 0 end + \n" +
-		"       case when filename like ? then 2 else 0 end + \n" +
-		"       case when labels like ? then 3 else 0 end + \n" +
-		"       case when `description` like ? then 1 else 0 end as matches \n" +
-		"  from file_previews \n" +
-		" where title like ?\n" +
-		"    or filename like ?\n" +
-		"    or labels like ?\n" +
-		"    or `description` like ?\n" +
-		" order by matches desc", bindKey, bindKey, bindKey, bindKey, bindKey, bindKey, bindKey, bindKey).Scan(&filePreviews)
+	if common.IsHexAddress(key) {
+		model.DB.Offset(offset).Limit(limit).Model(&FilePreview{}).Where("status = 2").Where("price = 0 or (price > 0 and nft_token_id > 0)").Where("eth_addr = ?", key).Order("created_at desc").Find(&filePreviews)
+	} else {
+		bindKey := "%" + key + "%"
+		model.DB.Offset(offset).Limit(limit).Raw("select *,\n"+
+			"       case when title like ? then 3 else 0 end + \n"+
+			"       case when filename like ? then 2 else 0 end + \n"+
+			"       case when labels like ? then 3 else 0 end + \n"+
+			"       case when `description` like ? then 1 else 0 end as matches \n"+
+			"  from file_previews \n"+
+			" where (title like ?\n"+
+			"    or filename like ?\n"+
+			"    or labels like ?\n"+
+			"    or `description` like ?)\n"+
+			"    and status = 2\n"+
+			" order by matches desc", bindKey, bindKey, bindKey, bindKey, bindKey, bindKey, bindKey, bindKey).Scan(&filePreviews)
+	}
 
 	filesInfoInMarket := make([]FileInfoInMarket, 0)
 

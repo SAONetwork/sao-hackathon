@@ -109,7 +109,7 @@ func (model *Model) DeleteCollection(collectionId uint) error {
 func (model *Model) GetSearchCollectionResult(key string) (*[]CollectionVO, error) {
 	var collections []Collection
 	bindKey := "%" + key + "%"
-	model.DB.Where("(title like ? or labels like ? or `description` like ?) and type = 0", bindKey, bindKey, bindKey).Find(&collections)
+	model.DB.Where("(title like ? or labels like ? or `description` like ? or eth_addr like ?) and type = 0", bindKey, bindKey, bindKey, bindKey).Find(&collections)
 
 	var result []CollectionVO
 	for _, c := range collections {
