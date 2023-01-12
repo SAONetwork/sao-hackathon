@@ -216,7 +216,7 @@ func (model *Model) GetUserProfile(ethAddr string, address string) (*UserProfile
 		TotalFollowings: totalFollowings,
 	}
 
-	if ethAddr != address {
+	if address != "" && ethAddr != address {
 		var followed int64
 		model.DB.Model(&UserFollowing{}).Where(&UserFollowing{Following: user.EthAddr, Follower: address}).Count(&followed)
 		result.Followed = followed > 0
