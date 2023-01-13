@@ -117,8 +117,11 @@ func (s *Server) AddFileWithPreview(ctx *gin.Context) {
 	} else if imageType == "image/jpeg" {
 		img, err := jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
 		if err != nil {
-			api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "jpeg decode failed"))
-			return
+			img, err = png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
+			if err != nil {
+				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "jpeg decode failed"))
+				return
+			}
 		}
 		id := uuid.New().String()
 		preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
