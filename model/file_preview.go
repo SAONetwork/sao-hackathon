@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/gwaylib/log"
 	"github.com/shopspring/decimal"
 	"math/big"
 	"path/filepath"
@@ -123,7 +124,10 @@ func (model *Model) GetFileInfo(fileId uint, ethAddress string) (*FileDetail, er
 	model.DB.Model(&FileComment{}).Where("status <> 2 and file_id = ? ", filePreview.Id).Count(&TotalComments)
 
 	var TotalCollections int64
-	model.DB.Model(&CollectionFile{}).Where("file_id = ? ", filePreview.Id).Count(&TotalCollections)
+	err = model.DB.Raw("select count(*) from collections c inner join collection_files f on c.id = f.collection_id where f.deleted_at is null and c.deleted_at is null and f.file_id = ? and (type = 0 or (type = 1 and c.eth_addr = ?))", filePreview.Id, ethAddress).Find(&TotalCollections).Error
+	if err != nil {
+		log.Error(err)
+	}
 
 	filesInfoInMarket := FileDetail{
 		FileInfoInMarket: FileInfoInMarket{Id: filePreview.Id,
