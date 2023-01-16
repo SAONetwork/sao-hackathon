@@ -55,7 +55,7 @@ func (model *Model) AddCollectionComment(comment *CollectionComment) (*CommentVO
 		avatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar)
 	}
 	commentVO := CommentVO{Id: comment.Id, ObjectId: strconv.FormatUint(uint64(comment.CollectionId), 10), DateTime: comment.CreatedAt.UnixMilli(), EthAddr: comment.EthAddr, Comment: comment.Comment, UserName: user.Username,
-		Avatar: avatar),
+		Avatar: avatar,
 		Editable: true}
 	return &commentVO, nil
 }
