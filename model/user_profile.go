@@ -145,11 +145,16 @@ func (model *Model) GetUserFollowers(address string) (*[]UserBasicProfileVO, err
 	for _, follower := range userFollowers {
 		var user UserProfile
 		model.DB.Where(&UserProfile{EthAddr: follower.Follower}).First(&user)
+
+		var avatar string
+		if user.Avatar != ""{
+			avatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar)
+		}
 		result = append(result, UserBasicProfileVO{
 			Id:       user.Id,
 			EthAddr:  user.EthAddr,
 			Username: user.Username,
-			Avatar:   fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar),
+			Avatar:   avatar,
 		})
 	}
 	return &result, nil
@@ -165,11 +170,16 @@ func (model *Model) GetUserFollowings(address string) (*[]UserBasicProfileVO, er
 	for _, following := range userFollowings {
 		var user UserProfile
 		model.DB.Where(&UserProfile{EthAddr: following.Following}).First(&user)
+
+		var avatar string
+		if user.Avatar != ""{
+			avatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar)
+		}
 		result = append(result, UserBasicProfileVO{
 			Id:       user.Id,
 			EthAddr:  user.EthAddr,
 			Username: user.Username,
-			Avatar:   fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar),
+			Avatar:   avatar,
 		})
 	}
 	return &result, nil
@@ -204,12 +214,16 @@ func (model *Model) GetUserProfile(ethAddr string, address string) (*UserProfile
 	var totalFollowings int64
 	model.DB.Model(&UserFollowing{}).Where(&UserFollowing{Follower: user.EthAddr}).Count(&totalFollowings)
 
+	var avatar string
+	if user.Avatar != ""{
+		avatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar)
+	}
 	result := UserProfileDetailVO{
 		UserProfileVO: UserProfileVO{
 			Id:               user.Id,
 			EthAddr:          user.EthAddr,
 			Username:         user.Username,
-			Avatar:           fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar),
+			Avatar:           avatar,
 			TotalUploads:     uploads,
 			TotalCollections: totalCollections},
 		TotalFollowers:  totalFollowers,
@@ -235,11 +249,16 @@ func (model *Model) GetSearchUserResult(key string) (*[]UserProfileVO, error) {
 
 		var totalCollections int64
 		model.DB.Model(&Collection{}).Where(&Collection{EthAddr: user.EthAddr}).Count(&totalCollections)
+
+		var avatar string
+		if user.Avatar != ""{
+			avatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar)
+		}
 		result = append(result, UserProfileVO{
 			Id:               user.Id,
 			EthAddr:          user.EthAddr,
 			Username:         user.Username,
-			Avatar:           fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar),
+			Avatar:           avatar,
 			TotalUploads:     uploads,
 			TotalCollections: totalCollections,
 		})

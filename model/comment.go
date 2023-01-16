@@ -75,8 +75,12 @@ func (model *Model) AddFileComment(comment *FileComment) (*CommentVO, error) {
 	}
 	var user UserProfile
 	model.DB.Model(&UserProfile{}).Where("eth_addr = ?", comment.EthAddr).First(&user)
+	var avatar string
+	if user.Avatar != ""{
+		avatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar)
+	}
 	commentVO := CommentVO{Id: comment.Id, ObjectId: strconv.FormatUint(uint64(comment.FileId), 10), DateTime: comment.CreatedAt.UnixMilli(), EthAddr: comment.EthAddr, Comment: comment.Comment, UserName: user.Username,
-		Avatar: fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar),
+		Avatar: avatar,
 		Editable: true}
 	return &commentVO, nil
 }
@@ -111,8 +115,12 @@ func (model *Model) GetFileComment(fileId uint, address string) (*[]CommentVO, e
 		var totalLikes int64
 		model.DB.Model(&FileCommentLike{}).Where("comment_id = ? ", comment.Id).Count(&totalLikes)
 
+		var avatar string
+		if user.Avatar != ""{
+			avatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar)
+		}
 		commentVO := CommentVO{Id: comment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: comment.CreatedAt.UnixMilli(), EthAddr: comment.EthAddr, Comment: comment.Comment, UserName: user.Username,
-			Avatar: fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar),
+			Avatar: avatar,
 			Editable: comment.EthAddr == address, Liked: liked>0, TotalLikes: totalLikes}
 
 		if comment.ParentId > 0 {
@@ -125,8 +133,13 @@ func (model *Model) GetFileComment(fileId uint, address string) (*[]CommentVO, e
 			} else {
 				var subCommentUser UserProfile
 				model.DB.Model(&UserProfile{}).Where("eth_addr = ?", comment.EthAddr).First(&subCommentUser)
+
+				var subCommentUserAvatar string
+				if subCommentUser.Avatar != ""{
+					subCommentUserAvatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, subCommentUser.Avatar)
+				}
 				parentCommentVO = ParentCommentVO{Id: parentComment.Id, ObjectId: strconv.FormatUint(uint64(fileId), 10), DateTime: parentComment.CreatedAt.UnixMilli(), EthAddr: parentComment.EthAddr, Comment: parentComment.Comment, UserName: subCommentUser.Username,
-					Avatar: fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, subCommentUser.Avatar)}
+					Avatar: subCommentUserAvatar}
 			}
 			commentVO.ParentComment = &parentCommentVO
 		}
