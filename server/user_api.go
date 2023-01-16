@@ -35,7 +35,11 @@ func (s *Server) UpdateUserProfile(ctx *gin.Context) {
 		return
 	}
 
-	if profileToUpdate.Avatar != "" && !strings.HasPrefix(profileToUpdate.Avatar, "http") {
+	if strings.HasPrefix(profileToUpdate.Avatar, "http") {
+		profileToUpdate.Avatar = ""
+	}
+
+	if profileToUpdate.Avatar != "" {
 		var imageType string
 		idx := strings.Index(profileToUpdate.Avatar, ";base64,")
 		if idx > 0 {
