@@ -23,6 +23,11 @@ func (s *Server) AddFileComment(ctx *gin.Context) {
 		api.BadRequest(ctx, "invalid.param", err.Error())
 		return
 	}
+	if comment.Comment == "" {
+		api.BadRequest(ctx, "invalid.param", "comment must not be empty")
+		return
+	}
+
 	comment.EthAddr = ethAddress
 
 	result, err := s.Model.AddFileComment(&comment)
