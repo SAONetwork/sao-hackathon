@@ -219,7 +219,6 @@ func (model *Model) GetSearchFileResult(key string, ethAddress string, offset in
 			"       case when `description` like ? then 1 else 0 end as matches \n"+
 			"  from file_previews \n"+
 			" where (title like ?\n"+
-			"    or filename like ?\n"+
 			"    or labels like ?\n"+
 			"    or `description` like ?)\n"+
 			"    and status = 2\n"+

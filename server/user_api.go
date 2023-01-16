@@ -1,12 +1,19 @@
 package server
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/fogleman/gg"
+	"github.com/google/uuid"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
 	"sao-datastore-storage/model"
 	"sao-datastore-storage/util"
 	"sao-datastore-storage/util/api"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,6 +33,53 @@ func (s *Server) UpdateUserProfile(ctx *gin.Context) {
 		log.Error("update user profile request body invalid: ", err)
 		api.BadRequest(ctx, "invalid.body", "update user profile request body invalid")
 		return
+	}
+
+	if profileToUpdate.Avatar != "" {
+		var imageType string
+		idx := strings.Index(profileToUpdate.Avatar, ";base64,")
+		if idx > 0 {
+			imageType = profileToUpdate.Avatar[5:idx]
+			log.Info(imageType)
+		}
+
+		if imageType == "image/gif" {
+			gifImg, err := gif.DecodeAll(base64.NewDecoder(base64.StdEncoding, strings.NewReader(profileToUpdate.Avatar[idx+8:])))
+			if err != nil {
+				api.BadRequest(ctx, "invalid.avatar", fmt.Sprintf("decode preview failed: %v", "gif decode failed"))
+				return
+			}
+			id := uuid.New().String()
+			preview := fmt.Sprintf("%s/%s.gif", s.Config.PreviewsPath, id)
+			SaveGIF(preview, gifImg)
+			profileToUpdate.Avatar = fmt.Sprintf("%s.gif", id)
+		} else if imageType == "image/png" {
+			img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(profileToUpdate.Avatar[idx+8:])))
+			if err != nil {
+				log.Info(err)
+				api.BadRequest(ctx, "invalid.avatar", fmt.Sprintf("decode preview failed: %v", "png decode failed"))
+				return
+			}
+			id := uuid.New().String()
+			dc := gg.NewContextForImage(img)
+			preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
+			dc.SavePNG(preview)
+			profileToUpdate.Avatar = fmt.Sprintf("%s.png", id)
+		} else if imageType == "image/jpeg" {
+			img, err := jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(profileToUpdate.Avatar[idx+8:])))
+			if err != nil {
+				img, err = png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(profileToUpdate.Avatar[idx+8:])))
+				if err != nil {
+					api.BadRequest(ctx, "invalid.avatar", fmt.Sprintf("decode preview failed: %v", "jpeg decode failed"))
+					return
+				}
+			}
+			id := uuid.New().String()
+			dc := gg.NewContextForImage(img)
+			preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
+			dc.SavePNG(preview)
+			profileToUpdate.Avatar = fmt.Sprintf("%s.png", id)
+		}
 	}
 
 	profile, err := s.Model.UpsertUserProfile(ethAddr, profileToUpdate)

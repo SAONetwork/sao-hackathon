@@ -149,7 +149,7 @@ func (model *Model) GetUserFollowers(address string) (*[]UserBasicProfileVO, err
 			Id:       user.Id,
 			EthAddr:  user.EthAddr,
 			Username: user.Username,
-			Avatar:   user.Avatar,
+			Avatar:   fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar),
 		})
 	}
 	return &result, nil
@@ -169,7 +169,7 @@ func (model *Model) GetUserFollowings(address string) (*[]UserBasicProfileVO, er
 			Id:       user.Id,
 			EthAddr:  user.EthAddr,
 			Username: user.Username,
-			Avatar:   user.Avatar,
+			Avatar:   fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar),
 		})
 	}
 	return &result, nil
@@ -209,7 +209,7 @@ func (model *Model) GetUserProfile(ethAddr string, address string) (*UserProfile
 			Id:               user.Id,
 			EthAddr:          user.EthAddr,
 			Username:         user.Username,
-			Avatar:           user.Avatar,
+			Avatar:           fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar),
 			TotalUploads:     uploads,
 			TotalCollections: totalCollections},
 		TotalFollowers:  totalFollowers,
@@ -239,7 +239,7 @@ func (model *Model) GetSearchUserResult(key string) (*[]UserProfileVO, error) {
 			Id:               user.Id,
 			EthAddr:          user.EthAddr,
 			Username:         user.Username,
-			Avatar:           user.Avatar,
+			Avatar:           fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar),
 			TotalUploads:     uploads,
 			TotalCollections: totalCollections,
 		})

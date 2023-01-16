@@ -57,7 +57,7 @@ func (s *Server) UpsertCollection(ctx *gin.Context) {
 			img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview[idx+8:])))
 			if err != nil {
 				log.Info(err)
-				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png and jpeg decode failed"))
+				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png decode failed"))
 				return
 			}
 			id := uuid.New().String()
@@ -68,8 +68,11 @@ func (s *Server) UpsertCollection(ctx *gin.Context) {
 		} else if imageType == "image/jpeg" {
 			img, err := jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview[idx+8:])))
 			if err != nil {
-				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png and jpeg decode failed"))
-				return
+				img, err = png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(collection.Preview[idx+8:])))
+				if err != nil {
+					api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "jpeg decode failed"))
+					return
+				}
 			}
 			id := uuid.New().String()
 			dc := gg.NewContextForImage(img)
