@@ -7,7 +7,7 @@ require (
 	github.com/BurntSushi/toml v1.1.0
 	github.com/fogleman/gg v1.2.1-0.20190220221249-0403632d5b90
 	github.com/gin-contrib/cors v1.3.1
-	github.com/gin-gonic/gin v1.8.0
+	github.com/gin-gonic/gin v1.8.1
 	github.com/ipfs/go-ipfs-api v0.3.0
 	github.com/ipfs/go-log/v2 v2.5.1
 	github.com/mitchellh/go-homedir v1.1.0
@@ -41,6 +41,9 @@ require (
 	github.com/libp2p/go-libp2p-http v0.2.1
 	github.com/multiformats/go-multiaddr v0.5.0
 	github.com/shopspring/decimal v1.3.1
+	github.com/swaggo/files v1.0.0
+	github.com/swaggo/gin-swagger v1.5.3
+	github.com/swaggo/swag v1.8.1
 	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df
 )
 
@@ -51,6 +54,9 @@ require (
 	github.com/GeertJohan/go.rice v1.0.2 // indirect
 	github.com/Gurpartap/async v0.0.0-20180927173644-4f7f499dd9ee // indirect
 	github.com/Kubuxu/imtui v0.0.0-20210401140320-41663d68d0fa // indirect
+	github.com/KyleBanks/depth v1.2.1 // indirect
+	github.com/PuerkitoBio/purell v1.1.1 // indirect
+	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/Stebalien/go-bitfield v0.0.1 // indirect
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
@@ -126,6 +132,10 @@ require (
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/logr v1.2.1 // indirect
 	github.com/go-logr/stdr v1.2.0 // indirect
+	github.com/go-openapi/jsonpointer v0.19.5 // indirect
+	github.com/go-openapi/jsonreference v0.19.6 // indirect
+	github.com/go-openapi/spec v0.20.4 // indirect
+	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
@@ -187,6 +197,7 @@ require (
 	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
 	github.com/klauspost/compress v1.15.1 // indirect
@@ -230,6 +241,7 @@ require (
 	github.com/lucas-clemente/quic-go v0.27.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/magefile/mage v1.9.0 // indirect
+	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/marten-seemann/qtls-go1-16 v0.1.5 // indirect
 	github.com/marten-seemann/qtls-go1-17 v0.1.1 // indirect
 	github.com/marten-seemann/qtls-go1-18 v0.1.1 // indirect
@@ -312,9 +324,9 @@ require (
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
+	golang.org/x/term v0.2.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	google.golang.org/api v0.30.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/genproto v0.0.0-20210917145530-b395a37504d4 // indirect
@@ -341,9 +353,9 @@ require (
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
 	github.com/whyrusleeping/base32 v0.0.0-20170828182744-c30ac30633cc
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
-	golang.org/x/net v0.0.0-20220607020251-c690dde0001d
-	golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e // indirect
-	golang.org/x/tools v0.1.11 // indirect
+	golang.org/x/net v0.2.0
+	golang.org/x/sys v0.2.0 // indirect
+	golang.org/x/tools v0.1.12 // indirect
 )
 
 replace github.com/filecoin-project/filecoin-ffi => ./extern/filecoin-ffi

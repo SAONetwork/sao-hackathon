@@ -26,7 +26,7 @@ type Server struct {
 	Repodir      string
 }
 
-func (s *Server) ServeAPI(listen string, contextPath string) {
+func (s *Server) ServeAPI(listen string, contextPath string, swagHandler gin.HandlerFunc) {
 	r := gin.Default()
 	r.Use(cors.New(s.CorsConfig()))
 
@@ -37,24 +37,60 @@ func (s *Server) ServeAPI(listen string, contextPath string) {
 		hackathon.POST("/file/addFileWithPreview", s.AddFileWithPreview)
 		hackathon.DELETE("/file/upload/:previewId", s.DeleteUploaded)
 		hackathon.GET("/file/order/download/:fileId", s.Download)
+		hackathon.DELETE("/file/:fileId", s.DeleteFile)
+		hackathon.POST("/fileStar", s.StarFile)
+		hackathon.DELETE("/fileStar", s.DeleteStarFile)
 
 		hackathon.POST("/user", s.UpdateUserProfile)
-		hackathon.GET("/user", s.GetUserProfile)
-		hackathon.GET("/user/purchases", s.GetUserPurchases)
-		hackathon.GET("/user/dashboard", s.GetUserDashboard)
 		hackathon.GET("/user/summary", s.GetUserSummary)
+		hackathon.POST("/user/follow/:address", s.FollowUser)
+		hackathon.DELETE("/user/follow/:address", s.UnFollowUser)
+
+		hackathon.GET("/collection", s.GetCollection)
+		hackathon.POST("/collection/recommendedTags", s.GetRecommendedTags)
+		hackathon.POST("/collection", s.UpsertCollection)
+		hackathon.DELETE("/collection/:collectionId", s.DeleteCollection)
+		hackathon.POST("/collectionFile", s.AddFileToCollection)
+		hackathon.DELETE("/collectionFile", s.RemoveFileFromCollection)
+		hackathon.POST("/collectionLike", s.LikeCollection)
+		hackathon.DELETE("/collectionLike", s.UnLikeCollection)
+		hackathon.POST("/collectionStar", s.StarCollection)
+		hackathon.DELETE("/collectionStar", s.DeleteStarCollection)
+
+		hackathon.POST("/comment/file", s.AddFileComment)
+		hackathon.DELETE("/comment/file/:commentId", s.DeleteFileComment)
+		hackathon.POST("/comment/like", s.LikeFileComment)
+		hackathon.DELETE("/comment/like", s.UnLikeFileComment)
+
+		hackathon.POST("/comment/collection", s.AddCollectionComment)
+		hackathon.DELETE("/comment/collection/:commentId", s.DeleteCollectionComment)
+		hackathon.POST("/comment/collection/like", s.LikeCollectionComment)
+		hackathon.DELETE("/comment/collection/like", s.UnLikeCollectionComment)
 	}
 
 	noSignature := r.Group(contextPath + "/api/v1")
 	{
+		noSignature.GET("/user", s.GetUserProfile)
+		noSignature.GET("/user/purchases", s.GetUserPurchases)
+		noSignature.GET("/user/dashboard", s.GetUserDashboard)
+		noSignature.GET("/user/followings", s.GetUserFollowings)
+		noSignature.GET("/user/followers", s.GetUserFollowers)
 		noSignature.GET("/fileInfos", s.FileInfos)
-		hackathon.GET("/file/:fileId", s.FileInfo)
+		noSignature.GET("/file/:fileId", s.FileInfo)
+		noSignature.GET("/search", s.GeneralSearch)
+		noSignature.GET("/collection/fileInfos", s.FileInfosByCollectionId)
+		noSignature.GET("/collection/liked", s.GetLikedCollection)
+		noSignature.GET("/comment/file", s.GetFileComments)
+		noSignature.GET("/comment/collection", s.GetCollectionComments)
 	}
 
 	fmt.Println(s.Config.PreviewsPath)
 	r.Static(contextPath + "/previews", s.Config.PreviewsPath)
 	procDir := filepath.Join(s.Repodir, cmd.FsStaging, "proc")
 	r.Static(contextPath + "/api/v1/proc/file", procDir)
+
+	// swagger
+	r.GET(contextPath+ "/swagger/*any", swagHandler)
 
 	r.Run(listen)
 }

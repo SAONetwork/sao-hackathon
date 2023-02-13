@@ -8,6 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/color/palette"
+	"image/draw"
+	"image/gif"
 	"io"
 	"net/http"
 	"os"
@@ -63,7 +66,7 @@ func DetectReaderType(reader io.Reader) (string, error) {
 }
 
 func GenerateTags(contentType string, tempFileName string) (string, error) {
-	if contentType == "image/png" || contentType == "image/jpeg" || contentType == "video/mp4" {
+	if contentType == "image/png" || contentType == "image/jpeg" || contentType == "video/mp4" || contentType == "image/gif" {
 		ctx := context.Background()
 		client, err := vision.NewImageAnnotatorClient(ctx)
 		if err != nil {
@@ -139,7 +142,7 @@ func DoRpc(ctx context.Context, s network.Stream, req interface{}, resp interfac
 }
 
 func GenerateImgPreview(contentType string, tempFileName string) (string, string, error) {
-	if contentType == "image/png" || contentType == "image/jpeg" {
+	if contentType == "image/png" || contentType == "image/jpeg" || contentType == "image/gif" {
 		return GenerateImgFromImgFile(contentType, tempFileName)
 	} else if contentType == "video/mp4" {
 		previewFileName := fmt.Sprintf("%s.jpg", tempFileName)
@@ -159,6 +162,20 @@ func GenerateImgFromImgFile(contentType string, tempFileName string) (string, st
 	var srcImage image.Image
 	var err error
 	var buf bytes.Buffer
+	if contentType == "image/gif" {
+		gifImage, err := LoadGIF(tempFileName)
+		if err != nil {
+			return "",tempFileName, err
+		}
+		gifImage, err = ResizeGif(gifImage, 256, 0)
+		if err != nil {
+			return "",tempFileName, err
+		}
+		gif.EncodeAll(&buf, gifImage)
+		data := buf.Bytes()
+		return fmt.Sprintf("data:%s;base64,%s", contentType, base64.StdEncoding.EncodeToString(data)), tempFileName, nil
+	}
+
 	if contentType == "image/png" {
 		srcImage, err = gg.LoadPNG(tempFileName)
 	} else {
@@ -171,6 +188,46 @@ func GenerateImgFromImgFile(contentType string, tempFileName string) (string, st
 	dc := gg.NewContextForImage(srcImage)
 	dc.EncodePNG(&buf)
 	data := buf.Bytes()
-	return base64.StdEncoding.EncodeToString(data), tempFileName, nil
+	return fmt.Sprintf("data:%s;base64,%s", contentType, base64.StdEncoding.EncodeToString(data)), tempFileName, nil
 }
 
+func LoadGIF(path string) (*gif.GIF, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	return gif.DecodeAll(file)
+}
+
+// Resize the gif to another thumbnail gif
+func ResizeGif(im *gif.GIF, width int, height int) (*gif.GIF, error) {
+	if width == 0 {
+		width = im.Config.Width * height / im.Config.Width
+	} else if height == 0 {
+		height = width * im.Config.Height / im.Config.Width
+	}
+
+	// reset the gif width and height
+	im.Config.Width = width
+	im.Config.Height = height
+
+	firstFrame := im.Image[0].Bounds()
+	img := image.NewRGBA(image.Rect(0, 0, firstFrame.Dx(), firstFrame.Dy()))
+
+	// resize frame by frame
+	for index, frame := range im.Image {
+		b := frame.Bounds()
+		draw.Draw(img, b, frame, b.Min, draw.Over)
+		im.Image[index] = ImageToPaletted(resize.Resize(uint(width), uint(height), img, resize.NearestNeighbor))
+	}
+
+	return im, nil
+}
+
+func ImageToPaletted(img image.Image) *image.Paletted {
+	b := img.Bounds()
+	pm := image.NewPaletted(b, palette.Plan9)
+	draw.FloydSteinberg.Draw(pm, b, img, image.ZP)
+	return pm
+}

@@ -1,9 +1,13 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"github.com/shopspring/decimal"
+	"golang.org/x/xerrors"
+	"gorm.io/gorm"
 	"path/filepath"
+	"strings"
 )
 
 type UserProfile struct {
@@ -13,9 +17,33 @@ type UserProfile struct {
 	Username string
 }
 
+type UserFollowing struct {
+	SaoModel
+	Follower  string
+	Following string
+}
+
+type UserBasicProfileVO struct {
+	Id               uint
+	EthAddr          string
+	Avatar           string
+	Username         string
+}
+
 type UserProfileVO struct {
-	Avatar   string
-	Username string
+	Id               uint
+	EthAddr          string
+	Avatar           string
+	Username         string
+	TotalUploads     int64
+	TotalCollections int64
+}
+
+type UserProfileDetailVO struct {
+	UserProfileVO
+	TotalFollowers  int64
+	TotalFollowings int64
+	Followed        bool
 }
 
 type UserSummary struct {
@@ -68,12 +96,174 @@ func (model *Model) UpdateUsername(ethAddr string, username string) error {
 	return nil
 }
 
-func (model *Model) GetUserProfile(ethAddr string) (*UserProfile, error) {
+func (model *Model) FollowUser(follower string, following string) error {
+	userFollowing := UserFollowing{
+		Following: following,
+		Follower:  follower,
+	}
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		var count int64
+		tx.Model(&UserProfile{}).Where(&UserProfile{EthAddr: following}).Count(&count)
+		if count <= 0 {
+			return xerrors.Errorf("the user not exist : %s", following)
+		}
+		tx.Model(&UserFollowing{}).Where("follower = ? and following = ? ", follower, following).Count(&count)
+		if count <= 0 {
+			if err := tx.Create(&userFollowing).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return err
+}
+
+func (model *Model) UnFollowUser(follower string, following string) error {
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		var count int64
+		tx.Model(&UserFollowing{}).Where("follower = ? and following = ? ", follower, following).Count(&count)
+		if count <= 0 {
+			return errors.New("the user" + follower + " haven't followed yet:" + following)
+		}
+
+		if err := tx.Where("follower = ? and following = ? ", follower, following).Delete(&UserFollowing{}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+	return err
+}
+
+func (model *Model) GetUserFollowers(address string) (*[]UserBasicProfileVO, error) {
+	var userFollowers []UserFollowing
+	err := model.DB.Model(&UserFollowing{}).Where(&UserFollowing{Following: address}).Find(&userFollowers).Error
+	if err != nil {
+		return nil, err
+	}
+	var result []UserBasicProfileVO
+	for _, follower := range userFollowers {
+		var user UserProfile
+		model.DB.Where(&UserProfile{EthAddr: follower.Follower}).First(&user)
+
+		var avatar string
+		if user.Avatar != ""{
+			avatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar)
+		}
+		result = append(result, UserBasicProfileVO{
+			Id:       user.Id,
+			EthAddr:  user.EthAddr,
+			Username: user.Username,
+			Avatar:   avatar,
+		})
+	}
+	return &result, nil
+}
+
+func (model *Model) GetUserFollowings(address string) (*[]UserBasicProfileVO, error) {
+	var userFollowings []UserFollowing
+	err := model.DB.Model(&UserFollowing{}).Where(&UserFollowing{Follower: address}).Find(&userFollowings).Error
+	if err != nil {
+		return nil, err
+	}
+	var result []UserBasicProfileVO
+	for _, following := range userFollowings {
+		var user UserProfile
+		model.DB.Where(&UserProfile{EthAddr: following.Following}).First(&user)
+
+		var avatar string
+		if user.Avatar != ""{
+			avatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar)
+		}
+		result = append(result, UserBasicProfileVO{
+			Id:       user.Id,
+			EthAddr:  user.EthAddr,
+			Username: user.Username,
+			Avatar:   avatar,
+		})
+	}
+	return &result, nil
+}
+
+func (model *Model) GetUserProfile(ethAddr string, address string) (*UserProfileDetailVO, error) {
 	var user UserProfile
 	user.EthAddr = ethAddr
-	user.Username = fmt.Sprintf("%s_%s", "Storverse", ethAddr[len(ethAddr)-4:])
-	model.DB.Where(&UserProfile{EthAddr: ethAddr}).FirstOrCreate(&user)
-	return &user, nil
+	if ethAddr == address {
+		user.Username = fmt.Sprintf("%s_%s", "Storverse", ethAddr[len(ethAddr)-4:])
+		model.DB.Where(&UserProfile{EthAddr: ethAddr}).FirstOrCreate(&user)
+	} else {
+		model.DB.Where(&UserProfile{EthAddr: ethAddr}).First(&user)
+	}
+	if user.Id == 0 {
+		return nil, nil
+	}
+
+	var uploads int64
+	model.DB.Model(&FilePreview{}).Where(&FilePreview{EthAddr: user.EthAddr}).Where("status = 1 or (status = 2 and price = 0) or (status = 2 and price > 0 and nft_token_id > 0)").Count(&uploads)
+
+	var totalCollections int64
+	criteria := "eth_addr = ?"
+	if !strings.EqualFold(ethAddr, address) {
+		criteria = criteria + " and type = 0"
+	}
+	model.DB.Model(&Collection{}).Where(criteria, user.EthAddr).Count(&totalCollections)
+
+	var totalFollowers int64
+	model.DB.Model(&UserFollowing{}).Where(&UserFollowing{Following: user.EthAddr}).Count(&totalFollowers)
+
+	var totalFollowings int64
+	model.DB.Model(&UserFollowing{}).Where(&UserFollowing{Follower: user.EthAddr}).Count(&totalFollowings)
+
+	var avatar string
+	if user.Avatar != ""{
+		avatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar)
+	}
+	result := UserProfileDetailVO{
+		UserProfileVO: UserProfileVO{
+			Id:               user.Id,
+			EthAddr:          user.EthAddr,
+			Username:         user.Username,
+			Avatar:           avatar,
+			TotalUploads:     uploads,
+			TotalCollections: totalCollections},
+		TotalFollowers:  totalFollowers,
+		TotalFollowings: totalFollowings,
+	}
+
+	if address != "" && ethAddr != address {
+		var followed int64
+		model.DB.Model(&UserFollowing{}).Where(&UserFollowing{Following: user.EthAddr, Follower: address}).Count(&followed)
+		result.Followed = followed > 0
+	}
+
+	return &result, nil
+}
+
+func (model *Model) GetSearchUserResult(key string) (*[]UserProfileVO, error) {
+	var users []UserProfile
+	var result []UserProfileVO
+	model.DB.Model(&UserProfile{}).Where("username like ? or eth_addr = ?", "%"+key+"%", key).Find(&users)
+	for _, user := range users {
+		var uploads int64
+		model.DB.Model(&FilePreview{}).Where(&FilePreview{EthAddr: user.EthAddr}).Where("status = 1 or (status = 2 and price = 0) or (status = 2 and price > 0 and nft_token_id > 0)").Count(&uploads)
+
+		var totalCollections int64
+		model.DB.Model(&Collection{}).Where(&Collection{EthAddr: user.EthAddr}).Count(&totalCollections)
+
+		var avatar string
+		if user.Avatar != ""{
+			avatar = fmt.Sprintf("%s/previews/%s", model.Config.ApiServer.Host, user.Avatar)
+		}
+		result = append(result, UserProfileVO{
+			Id:               user.Id,
+			EthAddr:          user.EthAddr,
+			Username:         user.Username,
+			Avatar:           avatar,
+			TotalUploads:     uploads,
+			TotalCollections: totalCollections,
+		})
+	}
+	return &result, nil
 }
 
 func (model *Model) GetUserSummary(ethAddr string) (*UserSummary, error) {
@@ -108,7 +298,7 @@ func (model *Model) GetUserSummary(ethAddr string) (*UserSummary, error) {
 	return &userSummary, nil
 }
 
-func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, previewPath func(string) string) (*UserDashboard, error) {
+func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, previewPath func(string) string, selfAddress string) (*UserDashboard, error) {
 	dashboard := UserDashboard{}
 
 	// recent uploads
@@ -125,6 +315,26 @@ func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, prev
 		if fileExtension != "" {
 			fileExtension = fileExtension[1:]
 		}
+
+		paid := true
+		if upload.Price.Cmp(decimal.NewFromInt(0))> 0 && ethAddr != selfAddress {
+			purchaseOrder := model.GetPurchaseOrder(upload.Id, selfAddress)
+			if purchaseOrder.FileId == 0 {
+				paid = false
+			}
+		} else if upload.Price.Cmp(decimal.NewFromInt(0)) == 0 {
+			paid = false
+		}
+
+		star := false
+		if selfAddress != "" {
+			var starCount int64
+			model.DB.Model(&CollectionFile{}).Where("eth_addr = ? and file_id = ? ", selfAddress, upload.Id).Count(&starCount)
+			if starCount > 0 {
+				star = true
+			}
+		}
+
 		fileInfoInMarket = append(fileInfoInMarket, FileInfoInMarket{Id: upload.Id,
 			CreatedAt:      upload.CreatedAt,
 			UpdatedAt:      upload.UpdatedAt,
@@ -141,7 +351,8 @@ func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, prev
 			FileCategory:   upload.FileCategory,
 			AdditionalInfo: upload.AdditionalInfo,
 			FileExtension:  fileExtension,
-			AlreadyPaid:    true})
+			AlreadyPaid:    paid,
+			Star:           star})
 	}
 	dashboard.RecentUploads = fileInfoInMarket
 
@@ -156,7 +367,7 @@ func (model *Model) GetUserDashboard(limit int, offset int, ethAddr string, prev
 	return &dashboard, nil
 }
 
-func (model *Model) GetUserPurchases(limit int, offset int, ethAddr string, previewPath func(string) string) (*UserPurchases, error) {
+func (model *Model) GetUserPurchases(limit int, offset int, ethAddr string, previewPath func(string) string, selfAddress string) (*UserPurchases, error) {
 	purchases := UserPurchases{}
 
 	// recent uploads
@@ -168,6 +379,23 @@ func (model *Model) GetUserPurchases(limit int, offset int, ethAddr string, prev
 
 	var fileInfoInMarket []FileInfoInMarket
 	for _, upload := range uploads {
+		paid := true
+		if upload.Price.Cmp(decimal.NewFromInt(0))> 0 && ethAddr != selfAddress {
+			purchaseOrder := model.GetPurchaseOrder(upload.Id, selfAddress)
+			if purchaseOrder.FileId == 0 {
+				paid = false
+			}
+		}
+
+		star := false
+		if selfAddress != "" {
+			var starCount int64
+			model.DB.Model(&CollectionFile{}).Where("eth_addr = ? and file_id = ? ", selfAddress, upload.Id).Count(&starCount)
+			if starCount > 0 {
+				star = true
+			}
+		}
+
 		fileInfoInMarket = append(fileInfoInMarket, FileInfoInMarket{Id: upload.Id,
 			CreatedAt:      upload.CreatedAt,
 			UpdatedAt:      upload.UpdatedAt,
@@ -183,7 +411,8 @@ func (model *Model) GetUserPurchases(limit int, offset int, ethAddr string, prev
 			NftTokenId:     upload.NftTokenId,
 			FileCategory:   upload.FileCategory,
 			AdditionalInfo: upload.AdditionalInfo,
-			AlreadyPaid:    true})
+			AlreadyPaid:    paid,
+			Star:           star})
 	}
 	purchases.Purchases = fileInfoInMarket
 

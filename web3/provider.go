@@ -2,10 +2,6 @@ package web3
 
 import (
 	"context"
-	"log"
-	"math/big"
-	"os"
-
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -13,6 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+	"log"
+	"math/big"
 )
 
 type Provider struct {
@@ -38,28 +36,36 @@ func NewProvider(url string) (*Provider, error) {
 
 func (p *Provider) ListenEvent(addresses []common.Address, event_chan chan types.Log, from *big.Int, done chan int) {
 
-	ctx := context.Background()
-
-	query := ethereum.FilterQuery{
-		Addresses: addresses,
-		FromBlock: from,
-	}
+	//ctx := context.Background()
+	//
+	//query := ethereum.FilterQuery{
+	//	Addresses: addresses,
+	//	FromBlock: from,
+	//}
 
 	var channel = make(chan types.Log)
-	sub, err := p.client.SubscribeFilterLogs(ctx, query, channel)
-	if err != nil {
-		log.Printf("failed to subscribe %s %s", err, p.URL)
-		return
-	}
+	//sub, err := p.client.SubscribeFilterLogs(ctx, query, channel)
+	//if err != nil {
+	//	log.Printf("failed to subscribe %s %s", err, p.URL)
+	//	return
+	//}
 
 	for {
+		latest := p.GetLatestBlock()
+		logs := p.FilterLogs(context.Background(), addresses, from, new(big.Int).SetUint64(latest))
+		go func(ch chan types.Log, logs []types.Log) {
+			for _, log := range logs {
+				ch <- log
+			}
+		}(channel, logs)
+
 		select {
 		case <-done:
 			return
-		case err := <-sub.Err():
-			log.Println(err, p.URL)
-			os.Exit(0)
-			break
+		//case err := <-sub.Err():
+		//	log.Println(err, p.URL)
+		//	os.Exit(0)
+		//	break
 		case log := <-channel:
 			event_chan <- log
 		}

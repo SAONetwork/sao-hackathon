@@ -4,9 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io"
+	"os"
 	"sao-datastore-storage/model"
 	"sao-datastore-storage/util"
 	"sao-datastore-storage/util/api"
@@ -83,20 +85,50 @@ func (s *Server) AddFileWithPreview(ctx *gin.Context) {
 		return
 	}
 
-	img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview)))
-	if err != nil {
-		log.Info(err)
-		img, err = jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview)))
+	var imageType string
+	idx := strings.Index(filePreview.Preview, ";base64,")
+	if idx > 0 {
+		imageType = filePreview.Preview[5:idx]
+		log.Info(imageType)
+	}
+
+	if imageType == "image/gif" {
+		gifImg, err := gif.DecodeAll(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
 		if err != nil {
-			api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png and jpeg decode failed"))
+			api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "gif decode failed"))
 			return
 		}
+		id := uuid.New().String()
+		preview := fmt.Sprintf("%s/%s.gif", s.Config.PreviewsPath, id)
+		filePreview.Preview = fmt.Sprintf("%s.gif", id)
+		SaveGIF(preview, gifImg)
+	} else if imageType == "image/png" {
+		img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
+		if err != nil {
+			log.Info(err)
+			api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "png decode failed"))
+			return
+		}
+		id := uuid.New().String()
+		preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
+		filePreview.Preview = fmt.Sprintf("%s.png", id)
+		dc := gg.NewContextForImage(img)
+		dc.SavePNG(preview)
+	} else if imageType == "image/jpeg" {
+		img, err := jpeg.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
+		if err != nil {
+			img, err = png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(filePreview.Preview[idx+8:])))
+			if err != nil {
+				api.BadRequest(ctx, "invalid.preview", fmt.Sprintf("decode preview failed: %v", "jpeg decode failed"))
+				return
+			}
+		}
+		id := uuid.New().String()
+		preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
+		filePreview.Preview = fmt.Sprintf("%s.png", id)
+		dc := gg.NewContextForImage(img)
+		dc.SavePNG(preview)
 	}
-	id := uuid.New().String()
-	dc := gg.NewContextForImage(img)
-	preview := fmt.Sprintf("%s/%s.png", s.Config.PreviewsPath, id)
-	dc.SavePNG(preview)
-	filePreview.Preview = fmt.Sprintf("%s.png", id)
 
 	fi, err := s.StoreFileWithPreview(ctx.Request.Context(), filePreview, ethAddress.(string))
 	if err != nil {
@@ -127,6 +159,26 @@ func (s *Server) DeleteUploaded(ctx *gin.Context) {
 	api.Success(ctx, nil)
 }
 
+func (s *Server) DeleteFile(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	fileId, err := strconv.ParseInt(ctx.Param("fileId"), 10, 64)
+	if err != nil {
+		api.BadRequest(ctx, "invalid.param", "")
+		return
+	}
+	err = s.deleteFile(ctx, uint(fileId), ethAddress.(string))
+	if err != nil {
+		api.ServerError(ctx, "deleteFile.error", err.Error())
+		return
+	}
+	api.Success(ctx, nil)
+}
+
 func (s *Server) FileInfo(ctx *gin.Context) {
 	ethAddress := ctx.GetHeader("address")
 	util.VerifySignature(ctx)
@@ -148,6 +200,40 @@ func (s *Server) FileInfo(ctx *gin.Context) {
 		api.ServerError(ctx, "getfile.error", err.Error())
 		return
 	}
+	api.Success(ctx, fi)
+}
+
+func (s *Server) FileInfosByCollectionId(ctx *gin.Context) {
+	ethAddress := ctx.GetHeader("address")
+	util.VerifySignature(ctx)
+	owner, _ := ctx.Get("User")
+	if ethAddress != "" && owner.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	offset, got := ctx.GetQuery("offset")
+	if !got {
+		offset = "0"
+	}
+	o, err := strconv.Atoi(offset)
+	if err != nil {
+		log.Info(err)
+		o = 0
+	}
+	limit, got := ctx.GetQuery("limit")
+	if !got {
+		limit = "10"
+	}
+	l, err := strconv.Atoi(limit)
+	if err != nil {
+		log.Info(err)
+		l = 10
+	}
+
+	collectionId,_ := ctx.GetQuery("collectionId")
+
+	fi := s.Model.GetFileInfosByCollectionId(collectionId, ethAddress, o, l)
 	api.Success(ctx, fi)
 }
 
@@ -237,4 +323,62 @@ func (s *Server) Download(ctx *gin.Context) {
 		api.ServerError(ctx, "getfile.error", err.Error())
 		return
 	}
+}
+
+
+func (s *Server) StarFile(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	fileIdParam, got := ctx.GetQuery("fileId")
+	if !got {
+		fileIdParam = "0"
+	}
+	fileId, err := strconv.ParseUint(fileIdParam, 10, 0)
+	if err != nil {
+		fileId = 0
+	}
+
+	err = s.Model.StarFile(ethAddress.(string), uint(fileId))
+	if err != nil {
+		log.Error(err)
+	}
+	api.Success(ctx, true)
+}
+
+func (s *Server) DeleteStarFile(ctx *gin.Context) {
+	ethAddress, _ := ctx.Get("User")
+	if ethAddress.(string) == "" {
+		api.Unauthorized(ctx, "invalid.signature", "invalid signature")
+		return
+	}
+
+	fileIdParam, got := ctx.GetQuery("fileId")
+	if !got {
+		fileIdParam = "0"
+	}
+	fileId, err := strconv.ParseUint(fileIdParam, 10, 0)
+	if err != nil {
+		fileId = 0
+	}
+
+	err = s.Model.DeleteStarFile(ethAddress.(string), uint(fileId))
+	if err != nil {
+		log.Error(err)
+		api.ServerError(ctx, "deleteStarFile.error", err.Error())
+		return
+	}
+	api.Success(ctx, true)
+}
+
+func SaveGIF(path string, im *gif.GIF) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return gif.EncodeAll(file, im)
 }

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 	"time"
@@ -48,6 +49,7 @@ type FileInfoInMarket struct {
 	AdditionalInfo string
 	FileExtension  string
 	WCid           string
+	Star           bool
 }
 
 type FileDetail struct {
@@ -56,6 +58,8 @@ type FileDetail struct {
 	Size            int64
 	Cid             string
 	StorageProvider string
+	TotalComments int64
+	TotalCollections int64
 }
 
 type PagedFileInfoInMarket struct {
@@ -123,4 +127,37 @@ func (model *Model) GetMcsInfoById(id uint) (*McsInfo, error) {
 		return nil, result.Error
 	}
 	return &info, nil
+}
+
+func (model *Model) DeleteFile(preview *FilePreview) (string, error) {
+	var ipfsHash string
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		var ipfsFileInfo FileInfo
+		if err := tx.Model(&FileInfo{}).Where("id = ?", preview.FileId).Find(&ipfsFileInfo).Error; err != nil {
+			return errors.New("ipfs file not found in system")
+		}
+		ipfsHash = ipfsFileInfo.IpfsHash
+
+		if err := tx.Model(&CollectionFile{}).Where("file_id = ?", preview.Id).Delete(&CollectionFile{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Raw("delete l from file_comment_likes l INNER JOIN file_comments c ON l.comment_id = c.id WHERE c.file_id =  ?", preview.Id).Find(&FileCommentLike{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&FileComment{}).Where("file_id = ?", preview.Id).Delete(&FileComment{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&preview).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&ipfsFileInfo).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	return ipfsHash, err
 }

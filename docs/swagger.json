@@ -1,0 +1,1204 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/collection": {
+            "get": {
+                "description": "get collection by address",
+                "tags": [
+                    "Collection"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The collection id for query",
+                        "name": "collectionId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The file id for query",
+                        "name": "fileId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The owner for query",
+                        "name": "owner",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "offset default 0",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "limit default 10",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "post": {
+                "description": "create collection",
+                "tags": [
+                    "Collection"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "body for request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.MockCollection"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/collection/fileInfos": {
+            "get": {
+                "description": "get file infos by collection id",
+                "tags": [
+                    "Collection"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The collection id for query",
+                        "name": "collectionId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "offset default 0",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "limit default 10",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/collection/liked": {
+            "get": {
+                "description": "get liked collections",
+                "tags": [
+                    "Collection"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address, by default header's address",
+                        "name": "address",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "offset default 0",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "limit default 10",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/collection/recommendedTags": {
+            "post": {
+                "description": "get recommended tags for collection",
+                "tags": [
+                    "Collection"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "get recommended tags by description",
+                        "name": "desc",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/collection/{collectionId}": {
+            "delete": {
+                "description": "delete collection",
+                "tags": [
+                    "Collection"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The collection id for deletion",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/collectionFile": {
+            "post": {
+                "description": "add file to collection",
+                "tags": [
+                    "Collection"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "body for request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.MockCollectionRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "description": "remove file from collection",
+                "tags": [
+                    "Collection"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The collection id for deletion",
+                        "name": "collectionId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The file id for deletion",
+                        "name": "fileId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/collectionLike": {
+            "post": {
+                "description": "like collection",
+                "tags": [
+                    "Collection"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The collection id for like operation",
+                        "name": "collectionId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "description": "unlike collection",
+                "tags": [
+                    "Collection"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The collection id for unlike operation",
+                        "name": "collectionId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/comment/collection": {
+            "get": {
+                "description": "get collection comments",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The collection id for query",
+                        "name": "collectionId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "post": {
+                "description": "add collection comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "body for request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.MockCollectionComment"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/comment/collection/like": {
+            "post": {
+                "description": "like collection comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comment id for like operation",
+                        "name": "commentId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "description": "unlike collection comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comment id for unlike operation",
+                        "name": "commentId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/comment/collection/{commentId}": {
+            "delete": {
+                "description": "delete collection comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comment id for deletion",
+                        "name": "commentId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/comment/file": {
+            "get": {
+                "description": "get file comments",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The file id for query",
+                        "name": "fileId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "post": {
+                "description": "add file comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "body for request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.MockFileComment"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/comment/file/{commentId}": {
+            "delete": {
+                "description": "delete file comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comment id for deletion",
+                        "name": "commentId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/comment/like": {
+            "post": {
+                "description": "like file comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comment id for like operation",
+                        "name": "commentId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "description": "unlike file comment",
+                "tags": [
+                    "Comment"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comment id for unlike operation",
+                        "name": "commentId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/file/{fileId}": {
+            "delete": {
+                "description": "delete file",
+                "tags": [
+                    "File"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The file id for deletion",
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/fileStar": {
+            "post": {
+                "description": "mark star to a file",
+                "tags": [
+                    "File"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The file id for star operation",
+                        "name": "fileId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "description": "cancel star operation from file",
+                "tags": [
+                    "File"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The file id for delete star operation",
+                        "name": "fileId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/search": {
+            "get": {
+                "description": "search files, collections and users etc.",
+                "tags": [
+                    "Search"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The key you want to search",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Set search scope, file/collection/user",
+                        "name": "scope",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/user": {
+            "get": {
+                "description": "get user followers",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/user/follow/{address}": {
+            "post": {
+                "description": "follow a user",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "the ethereum address of the user who you want to follow",
+                        "name": "address",
+                        "in": "path"
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "description": "cancel following of a user",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "the ethereum address of the user who you want to unfollow",
+                        "name": "address",
+                        "in": "path"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/user/followers": {
+            "get": {
+                "description": "get user followers",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/user/followings": {
+            "get": {
+                "description": "get user followings",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signaturemessage",
+                        "name": "signaturemessage",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum signature",
+                        "name": "signature",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user's ethereum address",
+                        "name": "address",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        }
+    },
+    "definitions": {
+        "main.MockCollection": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "ethAddr": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "labels": {
+                    "type": "string"
+                },
+                "preview": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "main.MockCollectionComment": {
+            "type": "object",
+            "properties": {
+                "collectionId": {
+                    "type": "integer"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "main.MockCollectionRequest": {
+            "type": "object",
+            "properties": {
+                "collectionIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "fileId": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "main.MockFileComment": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "string"
+                },
+                "fileId": {
+                    "type": "integer"
+                },
+                "parentId": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

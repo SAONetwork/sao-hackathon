@@ -53,7 +53,7 @@ func (m *Monitor) Run() {
 
 	latest := m.provider.GetLatestBlock()
 
-	done := make(chan int, 1)
+	//done := make(chan int, 1)
 	fmt.Println("filter logs")
 	logs := m.provider.FilterLogs(context.Background(), addresses, new(big.Int).SetInt64(m.cfg.BlockNumber), new(big.Int).SetUint64(latest))
 	go func(ch chan types.Log, logs []types.Log) {
@@ -80,7 +80,21 @@ func (m *Monitor) Run() {
 	s.StartAsync()
 
 	fmt.Println("listen event")
-	go m.provider.ListenEvent(addresses, ch, new(big.Int).SetInt64(m.cfg.BlockNumber), done)
+	//go m.provider.ListenEvent(addresses, ch, new(big.Int).SetInt64(m.cfg.BlockNumber), done)
+
+	s.Every(1).Seconds().Do(func() {
+		newLatest := m.provider.GetLatestBlock()
+		if newLatest == latest {
+			return
+		}
+		fmt.Printf("latest : %d newLatest : %d \n", latest, newLatest)
+		flogs := m.provider.FilterLogs(context.Background(), addresses, new(big.Int).SetUint64(latest), new(big.Int).SetUint64(newLatest))
+		latest = newLatest
+		for _, log := range flogs {
+			ch <- log
+		}
+	})
+
 	for {
 		logger := <-ch
 		event := logger.Topics[0].Hex()
